@@ -16,21 +16,27 @@ export interface Finding {
   id: string;
   severity: Severity;
   title: string;
-  description: string;
+  description: string;  // HTML string (rich text)
   location?: string;
   codeBlock?: CodeBlock;
   showCompare?: boolean;
   compareBlock?: CompareBlock;
   image?: string; // base64 data URL
   imageCaption?: string;
-  impact: string;
-  solution: string;
+  impact: string;    // HTML string (rich text)
+  solution: string;  // HTML string (rich text)
+  height?: number;   // px height override for preview card
 }
 
 export interface BusinessPoint {
   id: string;
   title: string;
-  description: string;
+  description: string; // HTML string (rich text)
+}
+
+export interface SectionHeights {
+  summary?: number;
+  business?: number;
 }
 
 export interface ReportData {
@@ -39,11 +45,12 @@ export interface ReportData {
   auditor: string;
   date: string;
   status: 'critical' | 'warning' | 'ok';
-  executiveSummary: string;
+  executiveSummary: string; // HTML string (rich text)
   findings: Finding[];
   businessPoints: BusinessPoint[];
   footerBrand: string;
   footerNote: string;
+  sectionHeights?: SectionHeights;
 }
 
 export const defaultReport: ReportData = {

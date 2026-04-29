@@ -1,11 +1,25 @@
 import { ReportData, Finding, Severity, severityConfig } from './types';
 
+// For plain-text fields (title, label, etc.) — prevents XSS in non-rich attributes
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+// For rich-text fields — HTML is authored by the RichTextEditor (trusted, same-origin)
+// We strip dangerous tags/attributes before embedding in the exported document
+function sanitizeRichHtml(html: string): string {
+  if (!html) return '';
+  // Remove script/style/iframe/object tags
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<iframe[\s\S]*?>/gi, '')
+    .replace(/<object[\s\S]*?>/gi, '')
+    .replace(/\son\w+\s*=/gi, ' data-removed=');
 }
 
 function syntaxHighlightJSON(json: string): string {
@@ -123,14 +137,14 @@ function renderFinding(finding: Finding, index: number): string {
       <div class="bug-body">
         <div class="field-row">
           <span class="field-label">Descripción</span>
-          <span class="field-value">${escapeHtml(finding.description)}</span>
+          <span class="field-value rte-content">${sanitizeRichHtml(finding.description)}</span>
         </div>
         ${locationHtml}
         ${codeBlockHtml}
         ${compareHtml}
         ${imageHtml}
-        ${finding.impact ? `<div class="impact-box"><span class="impact-icon">📉</span><div><strong>Impacto:</strong> ${escapeHtml(finding.impact)}</div></div>` : ''}
-        ${finding.solution ? `<div class="fix-box"><span class="impact-icon">✅</span><div><strong>Solución IT:</strong> ${escapeHtml(finding.solution)}</div></div>` : ''}
+        ${finding.impact ? `<div class="impact-box"><span class="impact-icon">📉</span><div class="rte-content"><strong>Impacto:</strong> ${sanitizeRichHtml(finding.impact)}</div></div>` : ''}
+        ${finding.solution ? `<div class="fix-box"><span class="impact-icon">✅</span><div class="rte-content"><strong>Solución IT:</strong> ${sanitizeRichHtml(finding.solution)}</div></div>` : ''}
       </div>
     </div>`;
 }
@@ -150,7 +164,7 @@ export function generateHTML(report: ReportData): string {
       (bp, i) => `
       <li>
         <span class="list-num">${i + 1}</span>
-        <span><strong>${escapeHtml(bp.title)}:</strong> ${escapeHtml(bp.description)}</span>
+        <span class="rte-content"><strong>${escapeHtml(bp.title)}:</strong> ${sanitizeRichHtml(bp.description)}</span>
       </li>`
     )
     .join('\n');
@@ -211,7 +225,7 @@ export function generateHTML(report: ReportData): string {
     .report-body { padding: 48px 56px; }
     .section-title { display: flex; align-items: center; gap: 12px; font-size: 18px; font-weight: 700; color: var(--brand-primary); margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid var(--border); }
     .section-num { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; background: var(--brand-accent); color: #fff; font-size: 13px; font-weight: 700; border-radius: 8px; flex-shrink: 0; }
-    .exec-summary { background: var(--surface-alt); border-left: 4px solid var(--brand-accent); border-radius: 0 12px 12px 0; padding: 20px 24px; margin-bottom: 40px; font-size: 14.5px; color: var(--text-secondary); white-space: pre-wrap; }
+    .exec-summary { background: var(--surface-alt); border-left: 4px solid var(--brand-accent); border-radius: 0 12px 12px 0; padding: 20px 24px; margin-bottom: 40px; font-size: 14.5px; color: var(--text-secondary); }
     .exec-summary strong { color: var(--text-primary); }
     .bug-card { border-radius: 12px; border: 1px solid; margin-bottom: 28px; overflow: hidden; }
     .bug-card.critical { border-color: var(--critical-border); background: var(--critical-bg); }
@@ -252,6 +266,16 @@ export function generateHTML(report: ReportData): string {
     .fix-box { display: flex; gap: 10px; align-items: flex-start; background: rgba(34,197,94,.06); border: 1px solid rgba(34,197,94,.2); border-radius: 8px; padding: 12px 16px; font-size: 13.5px; }
     .fix-box strong { color: #15803d; }
     code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: rgba(0,0,0,.06); padding: 1px 5px; border-radius: 4px; }
+    /* ── Rich-text content (paragraphs, lists) ── */
+    .rte-content p, .rte-content div { margin-bottom: 0.4em; min-height: 1em; }
+    .rte-content p:last-child, .rte-content div:last-child { margin-bottom: 0; }
+    .rte-content ul { list-style-type: disc; padding-left: 1.4em; margin: 0.4em 0; }
+    .rte-content ol { list-style-type: decimal; padding-left: 1.4em; margin: 0.4em 0; }
+    .rte-content li { margin-bottom: 0.2em; line-height: 1.6; }
+    .rte-content ul ul, .rte-content ol ol, .rte-content ul ol, .rte-content ol ul { margin: 0.2em 0; padding-left: 1.2em; }
+    .rte-content ul ul { list-style-type: circle; }
+    .rte-content ul ul ul { list-style-type: square; }
+    .exec-summary { } /* inherits rte-content from wrapper */
     .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
     .compare-col { border-radius: 10px; overflow: hidden; }
     .compare-col-header { padding: 8px 14px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
@@ -302,7 +326,7 @@ export function generateHTML(report: ReportData): string {
 
   <div class="report-body">
     <h2 class="section-title"><span class="section-num">1</span> Resumen Ejecutivo</h2>
-    <div class="exec-summary">${escapeHtml(report.executiveSummary)}</div>
+    <div class="exec-summary rte-content">${sanitizeRichHtml(report.executiveSummary)}</div>
 
     <hr class="divider"/>
 

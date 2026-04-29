@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { ReportData, defaultReport } from '@/lib/types';
+import { Finding, ReportData, SectionHeights, defaultReport } from '@/lib/types';
 import { generateHTML } from '@/lib/generateHTML';
 import ReportMeta from '@/components/builder/ReportMeta';
 import ExecutiveSummary from '@/components/builder/ExecutiveSummary';
@@ -24,6 +24,7 @@ export default function HomePage() {
   const [showPreview, setShowPreview] = useState(true);
   const [exported, setExported] = useState(false);
 
+  // ── Export handlers ────────────────────────────────────────────────────
   const handleExportHTML = useCallback(() => {
     const html = generateHTML(data);
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
@@ -52,6 +53,23 @@ export default function HomePage() {
     };
   }, [data]);
 
+  // ── Preview interaction callbacks ──────────────────────────────────────
+  const handleReorder = useCallback((findings: Finding[]) => {
+    setData(prev => ({ ...prev, findings }));
+  }, []);
+
+  const handleSectionResize = useCallback((heights: SectionHeights) => {
+    setData(prev => ({ ...prev, sectionHeights: heights }));
+  }, []);
+
+  const handleFindingResize = useCallback((id: string, height: number) => {
+    setData(prev => ({
+      ...prev,
+      findings: prev.findings.map(f => f.id === id ? { ...f, height } : f),
+    }));
+  }, []);
+
+  // ── Stats ──────────────────────────────────────────────────────────────
   const criticalCount = data.findings.filter(f => f.severity === 'critical').length;
   const warningCount = data.findings.filter(f => f.severity === 'warning').length;
   const totalFindings = data.findings.length;
@@ -182,7 +200,12 @@ export default function HomePage() {
         {/* Right Panel: Preview */}
         {showPreview && (
           <div className="w-1/2 flex flex-col overflow-hidden">
-            <ReportPreview data={data} />
+            <ReportPreview
+              data={data}
+              onReorder={handleReorder}
+              onResize={handleSectionResize}
+              onFindingResize={handleFindingResize}
+            />
           </div>
         )}
       </div>

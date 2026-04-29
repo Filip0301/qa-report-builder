@@ -1,6 +1,7 @@
 import React from 'react';
 import { BusinessPoint, ReportData } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
+import RichTextEditor from '@/components/ui/RichTextEditor';
 
 interface Props {
   data: ReportData;
@@ -37,7 +38,7 @@ export default function BusinessImpact({ data, onChange }: Props) {
 
       {points.length === 0 && (
         <p className="text-slate-500 text-sm italic">
-          Agrega puntos de implicación de negocio ("El So What?").
+          Agrega puntos de implicación de negocio (&quot;El So What?&quot;).
         </p>
       )}
 
@@ -52,7 +53,7 @@ export default function BusinessImpact({ data, onChange }: Props) {
               ✕ Eliminar
             </button>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="space-y-3">
             <div>
               <label className="field-label">Título</label>
               <input
@@ -63,14 +64,13 @@ export default function BusinessImpact({ data, onChange }: Props) {
                 className="field-input"
               />
             </div>
-            <div className="col-span-2">
+            <div>
               <label className="field-label">Descripción</label>
-              <input
-                type="text"
-                placeholder="Explica el impacto..."
+              <RichTextEditor
                 value={point.description}
-                onChange={e => updatePoint(point.id, 'description', e.target.value)}
-                className="field-input"
+                onChange={(html) => updatePoint(point.id, 'description', html)}
+                placeholder="Explica el impacto..."
+                rows={2}
               />
             </div>
           </div>

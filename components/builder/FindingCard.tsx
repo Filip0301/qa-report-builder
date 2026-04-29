@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { Finding, Severity, severityConfig } from '@/lib/types';
+import RichTextEditor from '@/components/ui/RichTextEditor';
+import { useState } from 'react';
 
 interface Props {
   finding: Finding;
@@ -121,15 +123,14 @@ export default function FindingCard({ finding, index, onChange, onRemove, onMove
             </div>
           </div>
 
-          {/* Description */}
+          {/* Description — Rich Text */}
           <div>
             <label className="field-label">Descripción *</label>
-            <textarea
-              rows={3}
-              placeholder="Describe el problema encontrado de forma clara y técnica..."
+            <RichTextEditor
               value={finding.description}
-              onChange={e => update('description', e.target.value)}
-              className="field-input resize-none"
+              onChange={(html) => update('description', html)}
+              placeholder="Describe el problema encontrado de forma clara y técnica..."
+              rows={3}
             />
           </div>
 
@@ -290,27 +291,25 @@ export default function FindingCard({ finding, index, onChange, onRemove, onMove
             )}
           </div>
 
-          {/* Impact */}
+          {/* Impact — Rich Text */}
           <div>
             <label className="field-label">📉 Impacto</label>
-            <textarea
-              rows={3}
-              placeholder="¿Qué consecuencia tiene este error? Ej: Conversiones no registradas, CPA inflado..."
+            <RichTextEditor
               value={finding.impact}
-              onChange={e => update('impact', e.target.value)}
-              className="field-input resize-none"
+              onChange={(html) => update('impact', html)}
+              placeholder="¿Qué consecuencia tiene este error? Ej: Conversiones no registradas, CPA inflado..."
+              rows={3}
             />
           </div>
 
-          {/* Solution */}
+          {/* Solution — Rich Text */}
           <div>
             <label className="field-label">✅ Solución IT</label>
-            <textarea
-              rows={3}
-              placeholder="¿Qué debe hacer el equipo técnico para corregirlo?"
+            <RichTextEditor
               value={finding.solution}
-              onChange={e => update('solution', e.target.value)}
-              className="field-input resize-none"
+              onChange={(html) => update('solution', html)}
+              placeholder="¿Qué debe hacer el equipo técnico para corregirlo?"
+              rows={3}
             />
           </div>
         </div>
