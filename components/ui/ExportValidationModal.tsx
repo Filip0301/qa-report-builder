@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 import { AnyDocData, DLDocData, TaggingPlanData, GTMAuditData, ReportData } from '@/lib/types';
 import { AlertTriangle, Info, X, Download } from 'lucide-react';

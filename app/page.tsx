@@ -211,8 +211,12 @@ export default function HomePage() {
     setData(prev => ({ ...prev, sectionHeights: heights } as AnyDocData));
   }, []);
   const handleFindingResize = useCallback((id: string, height: number) => {
-    setData(prev => ({ ...prev, findings: (prev as ReportData).findings.map(f => f.id === id ? { ...f, height } : f) } as AnyDocData));
-  }, []);
+    if (docType !== 'qa-audit') return;
+    setData(prev => ({
+      ...prev,
+      findings: (prev as ReportData).findings.map(f => f.id === id ? { ...f, height } : f),
+    } as AnyDocData));
+  }, [docType]);
 
   // ── Derived values ─────────────────────────────────────────────────────────
   const sections = sectionMap[docType];
@@ -223,7 +227,13 @@ export default function HomePage() {
   const warningCount  = isQA ? qaData.findings.filter(f => f.severity === 'warning').length  : 0;
   const totalFindings = isQA ? qaData.findings.length : 0;
 
-  const accentTabActive = `border-${accent}-500 text-${accent}-400 bg-${accent}-900/20`;
+  // Static accent classes per doc type (Tailwind needs full class strings, no interpolation)
+  const accentTabActive: Record<DocumentType, string> = {
+    'qa-audit':      'border-indigo-500 text-indigo-400 bg-indigo-900/20',
+    'datalayer-doc': 'border-teal-500 text-teal-400 bg-teal-900/20',
+    'tagging-plan':  'border-violet-500 text-violet-400 bg-violet-900/20',
+    'gtm-audit':     'border-emerald-500 text-emerald-400 bg-emerald-900/20',
+  };
 
   return (
     <div className="flex flex-col h-screen bg-slate-950 text-white overflow-hidden">
@@ -284,7 +294,7 @@ export default function HomePage() {
             {sections.map(s => (
               <button key={s.id} onClick={() => setActiveSection(s.id)}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold transition-all border-b-2 ${
-                  activeSection === s.id ? accentTabActive : 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-800/40'
+                  activeSection === s.id ? accentTabActive[docType] : 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-800/40'
                 }`}>
                 <span>{s.icon}</span>
                 <span className="hidden sm:inline">{s.label}</span>
