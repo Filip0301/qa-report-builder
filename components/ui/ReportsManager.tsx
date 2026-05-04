@@ -10,7 +10,15 @@ interface ReportMeta {
   client: string;
   created_at: string;
   report_status?: 'draft' | 'final';
+  doc_type?: string;
 }
+
+const docTypeBadge: Record<string,{ label: string; cls: string }> = {
+  'qa-audit':      { label: '🔍 QA',     cls: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30' },
+  'datalayer-doc': { label: '📐 DL',     cls: 'bg-teal-500/15 text-teal-400 border-teal-500/30' },
+  'tagging-plan':  { label: '📋 Plan',   cls: 'bg-violet-500/15 text-violet-400 border-violet-500/30' },
+  'gtm-audit':     { label: '🏷️ GTM',   cls: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
+};
 
 type StatusFilter = 'all' | 'draft' | 'final';
 
@@ -194,20 +202,19 @@ export default function ReportsManager({ onLoad, onClose }: Props) {
                     className="flex items-center justify-between p-4 rounded-xl border border-slate-700 bg-slate-800/40 hover:bg-slate-800 hover:border-indigo-500/50 cursor-pointer transition-all group"
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <h3 className="text-sm font-bold text-white truncate">
                           {report.title}
                         </h3>
+                        {/* Doc type badge */}
+                        {(() => { const dt = docTypeBadge[report.doc_type || 'qa-audit'] || docTypeBadge['qa-audit']; return (
+                          <span className={`flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full border ${dt.cls}`}>{dt.label}</span>
+                        ); })()}
                         {/* Status badge */}
                         <span className={`flex-shrink-0 flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                          isFinal
-                            ? 'bg-green-500/10 text-green-400 border-green-500/30'
-                            : 'bg-slate-700 text-slate-400 border-slate-600'
+                          isFinal ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-slate-700 text-slate-400 border-slate-600'
                         }`}>
-                          {isFinal
-                            ? <><CheckCircle className="w-2.5 h-2.5" /> Finalizado</>
-                            : <><FileEdit className="w-2.5 h-2.5" /> Borrador</>
-                          }
+                          {isFinal ? <><CheckCircle className="w-2.5 h-2.5" /> Finalizado</> : <><FileEdit className="w-2.5 h-2.5" /> Borrador</>}
                         </span>
                       </div>
                       <div className="flex items-center gap-4 text-xs text-slate-400">

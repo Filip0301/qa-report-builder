@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 export async function GET() {
   const { data, error } = await supabase
     .from('reports')
-    .select('id, title, client, created_at, report_status')
+    .select('id, title, client, created_at, report_status, doc_type')
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -17,7 +17,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title, client, data, reportStatus } = body;
+    const { title, client, data, reportStatus, docType } = body;
 
     const { data: newReport, error } = await supabase
       .from('reports')
@@ -26,6 +26,7 @@ export async function POST(request: Request) {
           title: title || 'Sin título',
           client: client || 'Sin cliente',
           report_status: reportStatus || 'draft',
+          doc_type: docType || 'qa-audit',
           data,
         },
       ])

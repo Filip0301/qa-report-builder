@@ -1,49 +1,52 @@
-'use client';
-
 import React from 'react';
-import { ReportData } from '@/lib/types';
+import { AnyDocData, DLDocData, TaggingPlanData, GTMAuditData, ReportData } from '@/lib/types';
 import { AlertTriangle, Info, X, Download } from 'lucide-react';
 
-interface ValidationItem {
-  type: 'warning' | 'info';
-  message: string;
-}
+interface ValidationItem { type: 'warning' | 'info'; message: string; }
 
 interface Props {
-  data: ReportData;
+  data: AnyDocData;
   exportType: 'pdf' | 'html';
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-function validateReport(data: ReportData): ValidationItem[] {
+function validateReport(data: AnyDocData): ValidationItem[] {
   const issues: ValidationItem[] = [];
 
-  if (!data.client.trim()) {
-    issues.push({ type: 'warning', message: 'Falta el nombre del cliente.' });
-  }
-  if (!data.reportTitle.trim()) {
-    issues.push({ type: 'warning', message: 'Falta el título del informe.' });
-  }
-  if (!data.auditor.trim()) {
-    issues.push({ type: 'warning', message: 'Falta el nombre del auditor.' });
+  if (data.docType === 'qa-audit') {
+    const d = data as ReportData;
+    if (!d.client.trim()) issues.push({ type: 'warning', message: 'Falta el nombre del cliente.' });
+    if (!d.reportTitle.trim()) issues.push({ type: 'warning', message: 'Falta el título del informe.' });
+    if (!d.auditor.trim()) issues.push({ type: 'warning', message: 'Falta el nombre del auditor.' });
+    const summaryEmpty = !d.executiveSummary || d.executiveSummary.replace(/<[^>]*>/g,'').trim() === '';
+    if (summaryEmpty) issues.push({ type: 'warning', message: 'El resumen ejecutivo está vacío.' });
+    if (d.findings.length === 0) issues.push({ type: 'warning', message: 'No hay hallazgos registrados.' });
+    if (d.businessPoints.length === 0) issues.push({ type: 'info', message: 'La sección de Negocio está vacía (opcional).' });
+  } else if (data.docType === 'datalayer-doc') {
+    const d = data as DLDocData;
+    if (!d.client.trim()) issues.push({ type: 'warning', message: 'Falta el nombre del cliente.' });
+    if (!d.projectName.trim()) issues.push({ type: 'warning', message: 'Falta el nombre del proyecto.' });
+    if (d.events.length === 0) issues.push({ type: 'warning', message: 'No hay eventos documentados.' });
+    if (d.variables.length === 0) issues.push({ type: 'info', message: 'El diccionario de variables está vacío (opcional).' });
+  } else if (data.docType === 'tagging-plan') {
+    const d = data as TaggingPlanData;
+    if (!d.client.trim()) issues.push({ type: 'warning', message: 'Falta el nombre del cliente.' });
+    if (!d.projectName.trim()) issues.push({ type: 'warning', message: 'Falta el nombre del proyecto.' });
+    if (d.items.length === 0) issues.push({ type: 'warning', message: 'No hay eventos en el plan de marcaje.' });
+    const objEmpty = !d.objective || d.objective.replace(/<[^>]*>/g,'').trim() === '';
+    if (objEmpty) issues.push({ type: 'info', message: 'El objetivo del plan está vacío (opcional).' });
+  } else if (data.docType === 'gtm-audit') {
+    const d = data as GTMAuditData;
+    if (!d.client.trim()) issues.push({ type: 'warning', message: 'Falta el nombre del cliente.' });
+    if (!d.containerId.trim()) issues.push({ type: 'warning', message: 'Falta el Container ID (GTM-XXXXX).' });
+    if (d.tags.length === 0) issues.push({ type: 'warning', message: 'No hay tags registrados en la auditoría.' });
+    if (d.triggers.length === 0) issues.push({ type: 'info', message: 'No hay triggers registrados (opcional).' });
+    if (d.variables.length === 0) issues.push({ type: 'info', message: 'No hay variables registradas (opcional).' });
   }
 
-  const summaryIsEmpty = !data.executiveSummary || data.executiveSummary.replace(/<[^>]*>/g, '').trim() === '';
-  if (summaryIsEmpty) {
-    issues.push({ type: 'warning', message: 'El resumen ejecutivo está vacío.' });
-  }
-
-  if (data.findings.length === 0) {
-    issues.push({ type: 'warning', message: 'No hay hallazgos registrados en el reporte.' });
-  }
-
-  if (data.businessPoints.length === 0) {
-    issues.push({ type: 'info', message: 'La sección de Implicación de Negocio está vacía (opcional).' });
-  }
-
-  if (data.reportStatus === 'draft') {
-    issues.push({ type: 'info', message: 'El reporte está marcado como Borrador, no como Finalizado.' });
+  if ((data as any).reportStatus === 'draft') {
+    issues.push({ type: 'info', message: 'El documento está marcado como Borrador.' });
   }
 
   return issues;

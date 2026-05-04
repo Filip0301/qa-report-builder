@@ -26,7 +26,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
 
   try {
     const body = await request.json();
-    const { title, client, data, reportStatus } = body;
+    const { title, client, data, reportStatus, docType } = body;
 
     const { error } = await supabase
       .from('reports')
@@ -34,6 +34,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
         title: title || 'Sin título',
         client: client || 'Sin cliente',
         report_status: reportStatus || 'draft',
+        doc_type: docType || 'qa-audit',
         data,
       })
       .eq('id', id);
