@@ -1,6 +1,9 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { useDebounce } from 'use-debounce';
+import { toast } from 'sonner';
+import { Cloud, FolderOpen, Plus, Loader2 } from 'lucide-react';
 import { Finding, ReportData, SectionHeights, defaultReport } from '@/lib/types';
 import { generateHTML } from '@/lib/generateHTML';
 import ReportMeta from '@/components/builder/ReportMeta';
@@ -8,6 +11,8 @@ import ExecutiveSummary from '@/components/builder/ExecutiveSummary';
 import FindingsList from '@/components/builder/FindingsList';
 import BusinessImpact from '@/components/builder/BusinessImpact';
 import ReportPreview from '@/components/preview/ReportPreview';
+import ReportsManager from '@/components/ui/ReportsManager';
+import ExportValidationModal from '@/components/ui/ExportValidationModal';
 
 type Section = 'meta' | 'summary' | 'findings' | 'business';
 
@@ -24,8 +29,78 @@ export default function HomePage() {
   const [showPreview, setShowPreview] = useState(true);
   const [exported, setExported] = useState(false);
 
+  // ── Supabase & Autosave State ──────────────────────────────────────────
+  const [currentReportId, setCurrentReportId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [showReportsManager, setShowReportsManager] = useState(false);
+  const [pendingExport, setPendingExport] = useState<'pdf' | 'html' | null>(null);
+  const [debouncedData] = useDebounce(data, 2000); // 2 seconds delay
+  const isFirstRender = useRef(true);
+
+  // Autosave Effect
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    const saveToCloud = async () => {
+      setIsSaving(true);
+      try {
+        const method = currentReportId ? 'PUT' : 'POST';
+        const url = currentReportId ? `/api/reports/${currentReportId}` : '/api/reports';
+        
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: debouncedData.reportTitle,
+            client: debouncedData.client,
+            reportStatus: debouncedData.reportStatus,
+            data: debouncedData,
+          }),
+        });
+
+        if (!res.ok) throw new Error('Error al autoguardar');
+        const result = await res.json();
+        
+        if (!currentReportId && result.id) {
+          setCurrentReportId(result.id);
+        }
+        setLastSaved(new Date());
+      } catch (error) {
+        console.error('Autosave failed', error);
+        // Silently fail or use toast, since it's autosave we might not want to spam the user.
+      } finally {
+        setIsSaving(false);
+      }
+    };
+
+    saveToCloud();
+  }, [debouncedData]); // Triggered every time debouncedData changes
+
+  const handleNewReport = () => {
+    if (confirm('¿Empezar un reporte nuevo? Perderás los cambios no guardados en el reporte actual si no le diste tiempo al autoguardado.')) {
+      setData(defaultReport);
+      setCurrentReportId(null);
+      setLastSaved(null);
+      isFirstRender.current = true; // reset to avoid immediate save
+      toast.info('Nuevo reporte iniciado');
+    }
+  };
+
+  const handleLoadReport = (id: string, loadedData: ReportData) => {
+    setData(loadedData);
+    setCurrentReportId(id);
+    setLastSaved(new Date());
+    setShowReportsManager(false);
+    isFirstRender.current = true; // prevent immediate re-save
+  };
+
   // ── Export handlers ────────────────────────────────────────────────────
-  const handleExportHTML = useCallback(() => {
+  // Raw export functions (called after validation confirmation)
+  const doExportHTML = useCallback(() => {
     const html = generateHTML(data);
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -39,18 +114,109 @@ export default function HomePage() {
     setTimeout(() => setExported(false), 3000);
   }, [data]);
 
-  const handleExportPDF = useCallback(() => {
+  // Interceptors that show validation modal first
+  const handleExportHTML = useCallback(() => {
+    setPendingExport('html');
+  }, []);
+
+  const handleExportPDF = useCallback(async () => {
+    setPendingExport('pdf');
+  }, []);
+
+  const doExportPDF = useCallback(async () => {
+    toast.info('Generando PDF, por favor espera...');
     const html = generateHTML(data);
-    const win = window.open('', '_blank');
-    if (!win) return;
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
-    win.onload = () => {
-      setTimeout(() => {
-        win.print();
-      }, 500);
-    };
+    const clientSlug = data.client.replace(/\s+/g, '_') || 'cliente';
+    const filename = `Auditoria_QA_${clientSlug}_${Date.now()}.pdf`;
+    
+    try {
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'absolute';
+      iframe.style.width = '1000px';
+      iframe.style.height = '1000px';
+      iframe.style.left = '-9999px';
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentWindow?.document;
+      if (!doc) throw new Error('No iframe document');
+
+      // Inject the HTML and html2pdf library into the iframe
+      const iframeHtml = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+            <style>
+              /* Overrides for PDF generation to remove white margins */
+              body { background: white !important; margin: 0 !important; padding: 0 !important; }
+              .page { margin: 0 !important; max-width: 100% !important; border-radius: 0 !important; box-shadow: none !important; }
+            </style>
+          </head>
+          <body>
+            <div id="pdf-content">${html}</div>
+            <script>
+              window.onload = () => {
+                const element = document.getElementById('pdf-content');
+                const opt = {
+                  margin:       0,
+                  filename:     '${filename}',
+                  image:        { type: 'jpeg', quality: 0.98 },
+                  html2canvas:  { scale: 2, useCORS: true, windowWidth: 1000 },
+                  jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                  pagebreak:    { mode: ['css', 'avoid-all'] }
+                };
+                
+                html2pdf().set(opt).from(element).outputPdf('blob').then(function(pdfBlob) {
+                  window.parent.postMessage({ type: 'pdf-done', blob: pdfBlob }, '*');
+                }).catch(function(err) {
+                  window.parent.postMessage({ type: 'pdf-error' }, '*');
+                });
+              };
+            </script>
+          </body>
+        </html>
+      `;
+
+      doc.open();
+      doc.write(iframeHtml);
+      doc.close();
+
+      // Listen for message from iframe
+      await new Promise((resolve, reject) => {
+        const handler = (e: MessageEvent) => {
+          if (e.data && e.data.type === 'pdf-done') {
+            window.removeEventListener('message', handler);
+            
+            // Create a download link for the blob in the main window
+            const url = URL.createObjectURL(e.data.blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            resolve(true);
+          } else if (e.data && e.data.type === 'pdf-error') {
+            window.removeEventListener('message', handler);
+            reject(new Error('html2pdf internal error'));
+          }
+        };
+        window.addEventListener('message', handler);
+        // Timeout after 30 seconds just in case
+        setTimeout(() => {
+          window.removeEventListener('message', handler);
+          reject(new Error('Timeout'));
+        }, 30000);
+      });
+
+      document.body.removeChild(iframe);
+      toast.success('PDF descargado exitosamente');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Error al generar el PDF. Verifica la consola.');
+    }
   }, [data]);
 
   // ── Preview interaction callbacks ──────────────────────────────────────
@@ -110,6 +276,33 @@ export default function HomePage() {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
+          {/* Cloud Status */}
+          <div className="flex items-center gap-1.5 mr-2 px-2 py-1 bg-slate-800/50 rounded text-xs text-slate-400 border border-slate-700/50">
+            {isSaving ? (
+              <><Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" /> Guardando...</>
+            ) : lastSaved ? (
+              <><Cloud className="w-3.5 h-3.5 text-green-400" /> Guardado {lastSaved.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}</>
+            ) : (
+              <><Cloud className="w-3.5 h-3.5" /> En local</>
+            )}
+          </div>
+
+          <button
+            onClick={handleNewReport}
+            className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700/50 text-slate-300 transition-colors flex items-center gap-1.5"
+            title="Nuevo Reporte"
+          >
+            <Plus className="w-3.5 h-3.5" /> Nuevo
+          </button>
+
+          <button
+            onClick={() => setShowReportsManager(true)}
+            className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700/50 text-slate-300 transition-colors flex items-center gap-1.5 mr-2"
+            title="Abrir Reporte Guardado"
+          >
+            <FolderOpen className="w-3.5 h-3.5" /> Abrir
+          </button>
+
           {/* Preview Toggle */}
           <button
             onClick={() => setShowPreview(!showPreview)}
@@ -197,7 +390,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Right Panel: Preview */}
         {showPreview && (
           <div className="w-1/2 flex flex-col overflow-hidden">
             <ReportPreview
@@ -209,6 +401,27 @@ export default function HomePage() {
           </div>
         )}
       </div>
+
+      {/* Reports Manager Modal */}
+      {showReportsManager && (
+        <ReportsManager
+          onLoad={handleLoadReport}
+          onClose={() => setShowReportsManager(false)}
+        />
+      )}
+
+      {/* Export Validation Modal */}
+      {pendingExport && (
+        <ExportValidationModal
+          data={data}
+          exportType={pendingExport}
+          onConfirm={() => {
+            if (pendingExport === 'html') doExportHTML();
+            else doExportPDF();
+          }}
+          onCancel={() => setPendingExport(null)}
+        />
+      )}
     </div>
   );
 }

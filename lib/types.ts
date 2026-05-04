@@ -45,6 +45,8 @@ export interface ReportData {
   auditor: string;
   date: string;
   status: 'critical' | 'warning' | 'ok';
+  reportStatus: 'draft' | 'final'; // Borrador o Finalizado
+  includeToc: boolean;              // Incluir tabla de contenidos en exportación
   executiveSummary: string; // HTML string (rich text)
   findings: Finding[];
   businessPoints: BusinessPoint[];
@@ -59,6 +61,8 @@ export const defaultReport: ReportData = {
   auditor: '',
   date: new Date().toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' }),
   status: 'critical',
+  reportStatus: 'draft',
+  includeToc: false,
   executiveSummary: '',
   findings: [],
   businessPoints: [],

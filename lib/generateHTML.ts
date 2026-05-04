@@ -171,6 +171,28 @@ export function generateHTML(report: ReportData): string {
 
   const statusBadge = getStatusBadge(report.status, '');
 
+  // Table of Contents
+  const sectionNum = report.businessPoints.length > 0 ? 3 : 2;
+  const tocHtml = report.includeToc ? `
+    <nav class="toc">
+      <div class="toc-title">📑 Tabla de Contenidos</div>
+      <ol class="toc-list">
+        <li class="toc-section"><a href="#section-summary">Resumen Ejecutivo</a></li>
+        <li class="toc-section">
+          <a href="#section-findings">Hallazgos Detectados</a>
+          ${report.findings.length > 0 ? `<ol class="toc-findings">
+            ${report.findings.map((f, i) => {
+              const sv = f.severity;
+              const emoji = sv === 'critical' ? '🔴' : sv === 'warning' ? '🟡' : sv === 'info' ? '🔵' : '🟣';
+              return `<li><a href="#finding-${i}">${emoji} ${escapeHtml(f.title)}</a></li>`;
+            }).join('\n            ')}
+          </ol>` : ''}
+        </li>
+        ${report.businessPoints.length > 0 ? `<li class="toc-section"><a href="#section-business">Implicación de Negocio</a></li>` : ''}
+      </ol>
+    </nav>
+    <hr class="divider" style="margin:0 0 36px 0;"/>` : '';
+
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -288,6 +310,15 @@ export function generateHTML(report: ReportData): string {
     .report-footer { background: var(--surface-alt); border-top: 1px solid var(--border); padding: 20px 56px; display: flex; align-items: center; justify-content: space-between; }
     .footer-brand { font-size: 13px; font-weight: 700; color: var(--text-muted); letter-spacing: .04em; }
     .footer-note  { font-size: 12px; color: var(--text-muted); }
+    /* ── Table of Contents ── */
+    .toc { background: var(--surface-alt); border: 1px solid var(--border); border-radius: 12px; padding: 24px 28px; margin-bottom: 36px; }
+    .toc-title { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--brand-accent); margin-bottom: 16px; }
+    .toc-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+    .toc-section > a { font-size: 14px; font-weight: 700; color: var(--text-primary); text-decoration: none; }
+    .toc-section > a:hover { color: var(--brand-accent); }
+    .toc-findings { list-style: none; padding: 6px 0 2px 16px; margin: 4px 0 0 0; display: flex; flex-direction: column; gap: 4px; border-left: 2px solid var(--border); }
+    .toc-findings li a { font-size: 13px; color: var(--text-secondary); text-decoration: none; }
+    .toc-findings li a:hover { color: var(--brand-accent); }
     @media print {
       @page { margin: 14mm 18mm 16mm 18mm; size: A4; }
       html { width: 210mm; }
@@ -325,18 +356,19 @@ export function generateHTML(report: ReportData): string {
   </div>
 
   <div class="report-body">
-    <h2 class="section-title"><span class="section-num">1</span> Resumen Ejecutivo</h2>
+    ${tocHtml}
+    <h2 id="section-summary" class="section-title"><span class="section-num">1</span> Resumen Ejecutivo</h2>
     <div class="exec-summary rte-content">${sanitizeRichHtml(report.executiveSummary)}</div>
 
     <hr class="divider"/>
 
-    <h2 class="section-title"><span class="section-num">2</span> Hallazgos Detectados</h2>
+    <h2 id="section-findings" class="section-title"><span class="section-num">2</span> Hallazgos Detectados</h2>
 
     ${findingsHtml || '<p style="color:#94a3b8;font-style:italic;">No se han registrado hallazgos.</p>'}
 
     ${report.businessPoints.length > 0 ? `
     <hr class="divider"/>
-    <h2 class="section-title"><span class="section-num">3</span> Implicación de Negocio</h2>
+    <h2 id="section-business" class="section-title"><span class="section-num">${sectionNum}</span> Implicación de Negocio</h2>
     <ul class="numbered-list">
       ${businessHtml}
     </ul>` : ''}
