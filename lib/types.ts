@@ -1,5 +1,5 @@
 // ── Document type discriminator ───────────────────────────────────────────────
-export type DocumentType = 'qa-audit' | 'datalayer-doc' | 'tagging-plan' | 'gtm-audit';
+export type DocumentType = 'qa-audit' | 'datalayer-doc' | 'tagging-plan' | 'gtm-audit' | 'cm360-audit';
 
 // ── QA Audit ──────────────────────────────────────────────────────────────────
 export type Severity = 'critical' | 'warning' | 'info' | 'improvement';
@@ -114,8 +114,105 @@ export const defaultGTMAudit: GTMAuditData = {
   summaryText: '', tags: [], triggers: [], variables: [], recommendations: '',
 };
 
+// ── CM360 Audit ───────────────────────────────────────────────────────────────
+export type CM360Action = 'Mantener' | 'Modificar' | 'Eliminar' | 'Crear';
+
+export interface CM360Floodlight {
+  id: string;
+  name: string;
+  cm360Id: string;
+  impressionsYesterday: string;
+  impressionsLast7Days: string;
+  category: string;
+  activityTagString: string;
+  groupTagString: string;
+  type: string;
+  expectedUrl: string;
+  action: CM360Action;
+  actionJustification: string;
+  newSourceOfTruth: string;
+}
+
+export interface CM360Variable {
+  id: string;
+  name: string;
+  type: string;
+  logic: string;
+  purpose: string;
+}
+
+export interface CM360Trigger {
+  id: string;
+  name: string;
+  type: string;
+  eventName: string;
+  firesOn: string;
+}
+
+export interface CM360Tag {
+  id: string;
+  name: string;
+  type: string;
+  activityId: string;
+  uVariables: string;
+  triggerAssigned: string;
+}
+
+export interface CM360TaggingProposal {
+  id: string;
+  priority: string;
+  cm360Id: string;
+  activityName: string;
+  countingType: string;
+  gtmTrigger: string;
+  u1: string;
+  u2: string;
+  u3: string;
+  u4: string;
+  u5: string;
+  u6: string;
+  u7: string;
+  uN: string;
+}
+
+export interface CM360AuditData {
+  docType: 'cm360-audit';
+  client: string;
+  projectName: string;
+  advertiserName: string;
+  advertiserId: string;
+  date: string;
+  auditor: string;
+  reportStatus: 'draft' | 'final';
+  footerBrand: string;
+  footerNote: string;
+  floodlights: CM360Floodlight[];
+  variables: CM360Variable[];
+  triggers: CM360Trigger[];
+  tags: CM360Tag[];
+  taggingProposals: CM360TaggingProposal[];
+}
+
+export const defaultCM360Audit: CM360AuditData = {
+  docType: 'cm360-audit',
+  client: '',
+  projectName: 'Auditoría CM360',
+  advertiserName: '',
+  advertiserId: '',
+  date: new Date().toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' }),
+  auditor: '',
+  reportStatus: 'draft',
+  footerBrand: 'Havas · SCA',
+  footerNote: 'Auditoría CM360 Interna — Uso Confidencial',
+  floodlights: [],
+  variables: [],
+  triggers: [],
+  tags: [],
+  taggingProposals: [],
+};
+
 // ── Union ─────────────────────────────────────────────────────────────────────
-export type AnyDocData = ReportData | DLDocData | TaggingPlanData | GTMAuditData;
+export type AnyDocData = ReportData | DLDocData | TaggingPlanData | GTMAuditData | CM360AuditData;
 
 export function getDocTitle(data: AnyDocData): string {
   if (data.docType === 'qa-audit') return data.reportTitle || 'Sin título';

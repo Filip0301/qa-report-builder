@@ -18,6 +18,7 @@ const docTypeBadge: Record<string,{ label: string; cls: string }> = {
   'datalayer-doc': { label: '📐 DL',     cls: 'bg-teal-500/15 text-teal-400 border-teal-500/30' },
   'tagging-plan':  { label: '📋 Plan',   cls: 'bg-violet-500/15 text-violet-400 border-violet-500/30' },
   'gtm-audit':     { label: '🏷️ GTM',   cls: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
+  'cm360-audit':   { label: '🎯 CM360', cls: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30' },
 };
 
 type StatusFilter = 'all' | 'draft' | 'final';

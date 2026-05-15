@@ -50,6 +50,15 @@ const options: DocTypeOption[] = [
     ring: 'ring-emerald-500/50 hover:ring-emerald-400',
     badge: 'bg-emerald-500/20 text-emerald-300',
   },
+  {
+    type: 'cm360-audit',
+    icon: '🎯',
+    label: 'Auditoría CM360',
+    description: 'Documenta el estado de los floodlights por anunciante, marcaje en GTM y propuestas de implementación en Campaign Manager 360.',
+    gradient: 'from-cyan-900/60 to-cyan-800/30',
+    ring: 'ring-cyan-500/50 hover:ring-cyan-400',
+    badge: 'bg-cyan-500/20 text-cyan-300',
+  },
 ];
 
 interface Props {
@@ -86,7 +95,7 @@ export default function DocTypeSelector({ onSelect, onClose }: Props) {
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="text-base font-bold text-white">{opt.label}</h3>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${opt.badge}`}>
-                      {opt.type === 'qa-audit' ? 'QA' : opt.type === 'datalayer-doc' ? 'DL' : opt.type === 'tagging-plan' ? 'TP' : 'GTM'}
+                      {opt.type === 'qa-audit' ? 'QA' : opt.type === 'datalayer-doc' ? 'DL' : opt.type === 'tagging-plan' ? 'TP' : opt.type === 'gtm-audit' ? 'GTM' : 'CM360'}
                     </span>
                   </div>
                   <p className="text-sm text-slate-400 leading-relaxed">{opt.description}</p>

@@ -6,14 +6,15 @@ import { toast } from 'sonner';
 import { Cloud, FolderOpen, Plus, Loader2 } from 'lucide-react';
 import {
   AnyDocData, DocumentType, Finding, ReportData, SectionHeights,
-  DLDocData, TaggingPlanData, GTMAuditData,
-  defaultReport, defaultDLDoc, defaultTaggingPlan, defaultGTMAudit,
+  DLDocData, TaggingPlanData, GTMAuditData, CM360AuditData,
+  defaultReport, defaultDLDoc, defaultTaggingPlan, defaultGTMAudit, defaultCM360Audit,
   getDocTitle,
 } from '@/lib/types';
 import { generateHTML } from '@/lib/generateHTML';
 import { generateDLHTML } from '@/lib/generateDLHTML';
 import { generateTaggingPlanHTML } from '@/lib/generateTaggingPlanHTML';
 import { generateGTMAuditHTML } from '@/lib/generateGTMAuditHTML';
+import { generateCM360AuditHTML } from '@/lib/generateCM360AuditHTML';
 
 // QA builder components
 import ReportMeta from '@/components/builder/ReportMeta';
@@ -37,6 +38,14 @@ import GTMTagsList from '@/components/builder/gtm-audit/GTMTagsList';
 import GTMTriggersList from '@/components/builder/gtm-audit/GTMTriggersList';
 import GTMVariablesList from '@/components/builder/gtm-audit/GTMVariablesList';
 
+// CM360 Audit builder components
+import CM360Meta from '@/components/builder/cm360-audit/CM360Meta';
+import CM360FloodlightsList from '@/components/builder/cm360-audit/CM360FloodlightsList';
+import CM360VariablesList from '@/components/builder/cm360-audit/CM360VariablesList';
+import CM360TriggersList from '@/components/builder/cm360-audit/CM360TriggersList';
+import CM360TagsList from '@/components/builder/cm360-audit/CM360TagsList';
+import CM360TaggingProposalsList from '@/components/builder/cm360-audit/CM360TaggingProposalsList';
+
 // UI components
 import ReportsManager from '@/components/ui/ReportsManager';
 import ExportValidationModal from '@/components/ui/ExportValidationModal';
@@ -48,10 +57,11 @@ const sectionMap: Record<DocumentType, { id: string; label: string; icon: string
   'datalayer-doc': [{ id:'meta', label:'Metadatos', icon:'📋' }, { id:'events', label:'Eventos', icon:'⚡' }, { id:'variables', label:'Variables', icon:'🔤' }],
   'tagging-plan':  [{ id:'meta', label:'Metadatos', icon:'📋' }, { id:'items', label:'Plan de Eventos', icon:'📌' }],
   'gtm-audit':     [{ id:'meta', label:'Metadatos', icon:'📋' }, { id:'tags', label:'Tags', icon:'🏷️' }, { id:'triggers', label:'Triggers', icon:'⚡' }, { id:'variables', label:'Variables', icon:'🔤' }],
+  'cm360-audit':   [{ id:'meta', label:'Metadatos', icon:'📋' }, { id:'floodlights', label:'Floodlights', icon:'🎯' }, { id:'variables', label:'Variables', icon:'🔤' }, { id:'triggers', label:'Triggers', icon:'⚡' }, { id:'tags', label:'Tags', icon:'🏷️' }, { id:'proposals', label:'Propuestas', icon:'💡' }],
 };
 
 const accentMap: Record<DocumentType, string> = {
-  'qa-audit': 'indigo', 'datalayer-doc': 'teal', 'tagging-plan': 'violet', 'gtm-audit': 'emerald',
+  'qa-audit': 'indigo', 'datalayer-doc': 'teal', 'tagging-plan': 'violet', 'gtm-audit': 'emerald', 'cm360-audit': 'cyan',
 };
 
 function generateDocHTML(data: AnyDocData): string {
@@ -60,6 +70,7 @@ function generateDocHTML(data: AnyDocData): string {
     case 'datalayer-doc': return generateDLHTML(data as DLDocData);
     case 'tagging-plan':  return generateTaggingPlanHTML(data as TaggingPlanData);
     case 'gtm-audit':     return generateGTMAuditHTML(data as GTMAuditData);
+    case 'cm360-audit':   return generateCM360AuditHTML(data as CM360AuditData);
   }
 }
 
@@ -126,7 +137,7 @@ export default function HomePage() {
     isFirstRender.current = true;
     const defaults: Record<DocumentType, AnyDocData> = {
       'qa-audit': defaultReport, 'datalayer-doc': defaultDLDoc,
-      'tagging-plan': defaultTaggingPlan, 'gtm-audit': defaultGTMAudit,
+      'tagging-plan': defaultTaggingPlan, 'gtm-audit': defaultGTMAudit, 'cm360-audit': defaultCM360Audit,
     };
     setData(defaults[type]);
     toast.info(`Nuevo documento: ${type}`);
@@ -233,6 +244,7 @@ export default function HomePage() {
     'datalayer-doc': 'border-teal-500 text-teal-400 bg-teal-900/20',
     'tagging-plan':  'border-violet-500 text-violet-400 bg-violet-900/20',
     'gtm-audit':     'border-emerald-500 text-emerald-400 bg-emerald-900/20',
+    'cm360-audit':   'border-cyan-500 text-cyan-400 bg-cyan-900/20',
   };
 
   return (
@@ -269,12 +281,10 @@ export default function HomePage() {
             <FolderOpen className="w-3.5 h-3.5"/> Abrir
           </button>
 
-          {/* Preview toggle (QA only) */}
-          {isQA && (
-            <button onClick={() => setShowPreview(!showPreview)} className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all ${showPreview ? 'bg-indigo-900/40 text-indigo-300 border-indigo-700/50' : 'bg-slate-800 text-slate-400 border-slate-700/50 hover:text-white'}`}>
-              {showPreview ? '⬅ Ocultar Preview' : '➡ Mostrar Preview'}
-            </button>
-          )}
+          {/* Preview toggle */}
+          <button onClick={() => setShowPreview(!showPreview)} className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all ${showPreview ? 'bg-indigo-900/40 text-indigo-300 border-indigo-700/50' : 'bg-slate-800 text-slate-400 border-slate-700/50 hover:text-white'}`}>
+            {showPreview ? '⬅ Ocultar Preview' : '➡ Mostrar Preview'}
+          </button>
 
           <button onClick={handleExportHTML} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 border border-slate-700/50 hover:bg-slate-700 hover:text-white transition-all">
             {exported ? '✅ Descargado!' : '⬇ Descargar HTML'}
@@ -288,7 +298,7 @@ export default function HomePage() {
       {/* Main Layout */}
       <div className="flex flex-1 overflow-hidden">
         {/* Builder Panel */}
-        <div className={`flex flex-col ${isQA && showPreview ? 'w-1/2' : 'w-full'} border-r border-slate-800 transition-all`}>
+        <div className={`flex flex-col ${showPreview ? 'w-1/2' : 'w-full'} border-r border-slate-800 transition-all`}>
           {/* Section Nav */}
           <div className="flex border-b border-slate-800 bg-slate-900/60 flex-shrink-0">
             {sections.map(s => (
@@ -327,12 +337,20 @@ export default function HomePage() {
             {docType === 'gtm-audit' && activeSection === 'tags'      && <GTMTagsList      data={data as GTMAuditData} onChange={d => setData(d)} />}
             {docType === 'gtm-audit' && activeSection === 'triggers'  && <GTMTriggersList  data={data as GTMAuditData} onChange={d => setData(d)} />}
             {docType === 'gtm-audit' && activeSection === 'variables' && <GTMVariablesList data={data as GTMAuditData} onChange={d => setData(d)} />}
+
+            {/* CM360 Audit sections */}
+            {docType === 'cm360-audit' && activeSection === 'meta'        && <CM360Meta                 data={data as CM360AuditData} onChange={d => setData(d)} />}
+            {docType === 'cm360-audit' && activeSection === 'floodlights' && <CM360FloodlightsList      data={data as CM360AuditData} onChange={d => setData(d)} />}
+            {docType === 'cm360-audit' && activeSection === 'variables'   && <CM360VariablesList        data={data as CM360AuditData} onChange={d => setData(d)} />}
+            {docType === 'cm360-audit' && activeSection === 'triggers'    && <CM360TriggersList         data={data as CM360AuditData} onChange={d => setData(d)} />}
+            {docType === 'cm360-audit' && activeSection === 'tags'        && <CM360TagsList             data={data as CM360AuditData} onChange={d => setData(d)} />}
+            {docType === 'cm360-audit' && activeSection === 'proposals'   && <CM360TaggingProposalsList data={data as CM360AuditData} onChange={d => setData(d)} />}
           </div>
 
           {/* Bottom bar */}
           <div className="border-t border-slate-800 px-6 py-3 flex items-center justify-between bg-slate-900/60 flex-shrink-0">
             <span className="text-xs text-slate-600">
-              {isQA ? 'Los cambios se reflejan en tiempo real en el preview →' : 'Auto-guardado activado ☁'}
+              Los cambios se reflejan en tiempo real en el preview →
             </span>
             <div className="flex gap-2">
               <button onClick={handleExportHTML} className="btn-secondary text-xs py-1.5">⬇ HTML</button>
@@ -341,10 +359,19 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Preview (QA only) */}
-        {isQA && showPreview && (
-          <div className="w-1/2 flex flex-col overflow-hidden">
-            <ReportPreview data={qaData} onReorder={handleReorder} onResize={handleSectionResize} onFindingResize={handleFindingResize}/>
+        {/* Preview */}
+        {showPreview && (
+          <div className="w-1/2 flex flex-col overflow-hidden bg-slate-900 relative">
+            {isQA ? (
+              <ReportPreview data={qaData} onReorder={handleReorder} onResize={handleSectionResize} onFindingResize={handleFindingResize}/>
+            ) : (
+              <iframe 
+                srcDoc={generateDocHTML(data)} 
+                className="w-full h-full bg-white border-none" 
+                title="Report Preview"
+                sandbox="allow-same-origin allow-scripts"
+              />
+            )}
           </div>
         )}
       </div>

@@ -44,6 +44,11 @@ function validateReport(data: AnyDocData): ValidationItem[] {
     if (d.tags.length === 0) issues.push({ type: 'warning', message: 'No hay tags registrados en la auditoría.' });
     if (d.triggers.length === 0) issues.push({ type: 'info', message: 'No hay triggers registrados (opcional).' });
     if (d.variables.length === 0) issues.push({ type: 'info', message: 'No hay variables registradas (opcional).' });
+  } else if (data.docType === 'cm360-audit') {
+    const d = data as import('@/lib/types').CM360AuditData;
+    if (!d.client.trim()) issues.push({ type: 'warning', message: 'Falta el nombre del cliente.' });
+    if (!d.advertiserId.trim()) issues.push({ type: 'warning', message: 'Falta el ID del Advertiser.' });
+    if (d.floodlights.length === 0) issues.push({ type: 'info', message: 'No hay floodlights documentados (opcional).' });
   }
 
   if ((data as any).reportStatus === 'draft') {
