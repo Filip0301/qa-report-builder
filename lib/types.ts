@@ -1,3 +1,5 @@
+import { todayIso } from './dates';
+
 // ── Document type discriminator ───────────────────────────────────────────────
 export type DocumentType = 'qa-audit' | 'datalayer-doc' | 'tagging-plan' | 'gtm-audit' | 'cm360-audit';
 
@@ -25,14 +27,15 @@ export interface ReportData {
   footerBrand: string; footerNote: string; sectionHeights?: SectionHeights;
 }
 
-export const defaultReport: ReportData = {
+/** Crea un documento nuevo (siempre un objeto distinto, con la fecha de hoy). */
+export const createDefaultReport = (): ReportData => ({
   docType: 'qa-audit', client: '',
   reportTitle: 'Auditoría Técnica – Integridad del DataLayer', auditor: '',
-  date: new Date().toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' }),
+  date: todayIso(),
   status: 'critical', reportStatus: 'draft', includeToc: false,
   executiveSummary: '', findings: [], businessPoints: [],
   footerBrand: 'Havas · SCA', footerNote: 'Auditoría Técnica Interna — Uso Confidencial',
-};
+});
 
 export const severityConfig: Record<Severity, { label: string; emoji: string; color: string; bgColor: string; borderColor: string }> = {
   critical: { label: 'Crítico', emoji: '🔴', color: '#ef4444', bgColor: '#fef2f2', borderColor: '#fca5a5' },
@@ -58,13 +61,14 @@ export interface DLDocData {
   footerBrand: string; footerNote: string;
   overview: string; events: DLEvent[]; variables: DLVariable[];
 }
-export const defaultDLDoc: DLDocData = {
+/** Crea un documento nuevo (siempre un objeto distinto, con la fecha de hoy). */
+export const createDefaultDLDoc = (): DLDocData => ({
   docType: 'datalayer-doc', client: '', projectName: 'Documentación DataLayer',
-  version: 'v1.0', date: new Date().toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' }),
+  version: 'v1.0', date: todayIso(),
   author: '', reportStatus: 'draft', includeToc: false,
   footerBrand: 'Havas · SCA', footerNote: 'Documento Técnico Interno — Uso Confidencial',
   overview: '', events: [], variables: [],
-};
+});
 
 // ── Tagging Plan ──────────────────────────────────────────────────────────────
 export type TaggingItemStatus = 'pending' | 'in-progress' | 'done' | 'blocked';
@@ -82,13 +86,14 @@ export interface TaggingPlanData {
   footerBrand: string; footerNote: string;
   objective: string; scope: string; items: TaggingItem[]; acceptanceCriteria: string;
 }
-export const defaultTaggingPlan: TaggingPlanData = {
+/** Crea un documento nuevo (siempre un objeto distinto, con la fecha de hoy). */
+export const createDefaultTaggingPlan = (): TaggingPlanData => ({
   docType: 'tagging-plan', client: '', projectName: 'Plan de Marcaje',
-  version: 'v1.0', date: new Date().toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' }),
+  version: 'v1.0', date: todayIso(),
   author: '', platform: 'GA4 + GTM', reportStatus: 'draft', includeToc: false,
   footerBrand: 'Havas · SCA', footerNote: 'Plan de Marcaje Interno — Uso Confidencial',
   objective: '', scope: '', items: [], acceptanceCriteria: '',
-};
+});
 
 // ── GTM Audit ─────────────────────────────────────────────────────────────────
 export type GTMTagStatus = 'active' | 'paused' | 'issues';
@@ -105,14 +110,15 @@ export interface GTMAuditData {
   summaryText: string; tags: GTMTag[]; triggers: GTMTrigger[];
   variables: GTMVariable[]; recommendations: string;
 }
-export const defaultGTMAudit: GTMAuditData = {
+/** Crea un documento nuevo (siempre un objeto distinto, con la fecha de hoy). */
+export const createDefaultGTMAudit = (): GTMAuditData => ({
   docType: 'gtm-audit', client: '', projectName: 'Auditoría GTM',
   containerId: '', accountId: '',
-  date: new Date().toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' }),
+  date: todayIso(),
   auditor: '', reportStatus: 'draft',
   footerBrand: 'Havas · SCA', footerNote: 'Auditoría GTM Interna — Uso Confidencial',
   summaryText: '', tags: [], triggers: [], variables: [], recommendations: '',
-};
+});
 
 // ── CM360 Audit ───────────────────────────────────────────────────────────────
 export type CM360Action = 'Mantener' | 'Modificar' | 'Eliminar' | 'Crear';
@@ -193,13 +199,14 @@ export interface CM360AuditData {
   taggingProposals: CM360TaggingProposal[];
 }
 
-export const defaultCM360Audit: CM360AuditData = {
+/** Crea un documento nuevo (siempre un objeto distinto, con la fecha de hoy). */
+export const createDefaultCM360Audit = (): CM360AuditData => ({
   docType: 'cm360-audit',
   client: '',
   projectName: 'Auditoría CM360',
   advertiserName: '',
   advertiserId: '',
-  date: new Date().toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' }),
+  date: todayIso(),
   auditor: '',
   reportStatus: 'draft',
   footerBrand: 'Havas · SCA',
@@ -209,12 +216,16 @@ export const defaultCM360Audit: CM360AuditData = {
   triggers: [],
   tags: [],
   taggingProposals: [],
-};
+});
 
 // ── Union ─────────────────────────────────────────────────────────────────────
 export type AnyDocData = ReportData | DLDocData | TaggingPlanData | GTMAuditData | CM360AuditData;
 
 export function getDocTitle(data: AnyDocData): string {
-  if (data.docType === 'qa-audit') return data.reportTitle || 'Sin título';
-  return data.projectName || 'Sin título';
+  const title = data.docType === 'qa-audit' ? data.reportTitle : data.projectName;
+  return title?.trim() || 'Sin título';
+}
+
+export function getDocClient(data: AnyDocData): string {
+  return data.client?.trim() ?? '';
 }

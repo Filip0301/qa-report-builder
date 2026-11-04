@@ -1,6 +1,7 @@
 import React from 'react';
 import { ReportData } from '@/lib/types';
 import { FileEdit, CheckCircle } from 'lucide-react';
+import DateField from '@/components/ui/DateField';
 
 interface Props {
   data: ReportData;
@@ -21,10 +22,10 @@ export default function ReportMeta({ data, onChange }: Props) {
     <div className="space-y-4">
       <h2 className="text-sm font-bold uppercase tracking-widest text-indigo-400 mb-4">Datos del Informe</h2>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="field-label">Cliente *</label>
-          <input
+          <input aria-label="Cliente"
             type="text"
             placeholder="Ej: VTR, Falabella..."
             value={data.client}
@@ -34,7 +35,7 @@ export default function ReportMeta({ data, onChange }: Props) {
         </div>
         <div>
           <label className="field-label">Auditor</label>
-          <input
+          <input aria-label="Auditor"
             type="text"
             placeholder="Nombre del analista"
             value={data.auditor}
@@ -46,7 +47,7 @@ export default function ReportMeta({ data, onChange }: Props) {
 
       <div>
         <label className="field-label">Título del Informe *</label>
-        <input
+        <input aria-label="Título del Informe"
           type="text"
           placeholder="Ej: Auditoría Técnica – Integridad del DataLayer"
           value={data.reportTitle}
@@ -55,20 +56,14 @@ export default function ReportMeta({ data, onChange }: Props) {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="field-label">Fecha</label>
-          <input
-            type="text"
-            placeholder="Ej: 23 de abril de 2026"
-            value={data.date}
-            onChange={e => update('date', e.target.value)}
-            className="field-input"
-          />
+          <DateField value={data.date} onChange={v => update('date', v)} />
         </div>
         <div>
           <label className="field-label">Estado General</label>
-          <select
+          <select aria-label="Estado General"
             value={data.status}
             onChange={e => update('status', e.target.value)}
             className="field-input"
@@ -80,10 +75,10 @@ export default function ReportMeta({ data, onChange }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="field-label">Marca / Agencia (Footer)</label>
-          <input
+          <input aria-label="Marca / Agencia (Footer)"
             type="text"
             placeholder="Ej: Havas · SCA"
             value={data.footerBrand}
@@ -93,7 +88,7 @@ export default function ReportMeta({ data, onChange }: Props) {
         </div>
         <div>
           <label className="field-label">Nota del Footer</label>
-          <input
+          <input aria-label="Nota del Footer"
             type="text"
             placeholder="Ej: Uso Confidencial"
             value={data.footerNote}

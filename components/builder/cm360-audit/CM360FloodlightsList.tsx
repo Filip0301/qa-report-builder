@@ -53,7 +53,7 @@ export default function CM360FloodlightsList({ data, onChange }: Props) {
         </div>
       ) : (
         <div className="space-y-4">
-          {data.floodlights.map((f, i) => {
+          {data.floodlights.map((f) => {
             const sc = ACTION_OPTIONS.find(a => a.value === f.action)!;
             return (
               <div key={f.id} className="border border-slate-700 bg-slate-800/20 rounded-xl p-4 space-y-3">
@@ -111,7 +111,7 @@ export default function CM360FloodlightsList({ data, onChange }: Props) {
                     <input className="field-input text-xs text-blue-300" value={f.expectedUrl} onChange={e=>update(f.id,'expectedUrl',e.target.value)} placeholder="https://..."/>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] text-slate-400 mb-1">Justificación Técnica (Racional)</label>
                     <input className="field-input text-xs" value={f.actionJustification} onChange={e=>update(f.id,'actionJustification',e.target.value)} placeholder="Por qué se propone esta acción..."/>

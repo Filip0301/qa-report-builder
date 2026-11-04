@@ -3,30 +3,31 @@ import React from 'react';
 import { DLDocData } from '@/lib/types';
 import { CheckCircle, FileEdit } from 'lucide-react';
 import RichTextEditor from '@/components/ui/RichTextEditor';
+import DateField from '@/components/ui/DateField';
 
 interface Props { data: DLDocData; onChange: (d: DLDocData) => void; }
 
 export default function DLMeta({ data, onChange }: Props) {
-  const set = (field: keyof DLDocData, value: any) => onChange({ ...data, [field]: value });
+  const set = <K extends keyof DLDocData>(field: K, value: DLDocData[K]) => onChange({ ...data, [field]: value });
   return (
     <div className="space-y-4">
       <h2 className="text-sm font-bold uppercase tracking-widest text-teal-400 mb-4">Metadatos del Documento</h2>
-      <div className="grid grid-cols-2 gap-4">
-        <div><label className="field-label">Cliente *</label><input className="field-input" value={data.client} onChange={e=>set('client',e.target.value)} placeholder="Ej: Falabella"/></div>
-        <div><label className="field-label">Nombre del Proyecto *</label><input className="field-input" value={data.projectName} onChange={e=>set('projectName',e.target.value)} placeholder="Ej: DataLayer E-commerce"/></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div><label className="field-label">Cliente *</label><input aria-label="Cliente" className="field-input" value={data.client} onChange={e=>set('client',e.target.value)} placeholder="Ej: Falabella"/></div>
+        <div><label className="field-label">Nombre del Proyecto *</label><input aria-label="Nombre del Proyecto" className="field-input" value={data.projectName} onChange={e=>set('projectName',e.target.value)} placeholder="Ej: DataLayer E-commerce"/></div>
       </div>
-      <div className="grid grid-cols-3 gap-4">
-        <div><label className="field-label">Versión</label><input className="field-input" value={data.version} onChange={e=>set('version',e.target.value)} placeholder="v1.0"/></div>
-        <div><label className="field-label">Fecha</label><input className="field-input" value={data.date} onChange={e=>set('date',e.target.value)}/></div>
-        <div><label className="field-label">Autor</label><input className="field-input" value={data.author} onChange={e=>set('author',e.target.value)} placeholder="Nombre del analista"/></div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div><label className="field-label">Versión</label><input aria-label="Versión" className="field-input" value={data.version} onChange={e=>set('version',e.target.value)} placeholder="v1.0"/></div>
+        <div><label className="field-label">Fecha</label><DateField value={data.date} onChange={v=>set('date',v)}/></div>
+        <div><label className="field-label">Autor</label><input aria-label="Autor" className="field-input" value={data.author} onChange={e=>set('author',e.target.value)} placeholder="Nombre del analista"/></div>
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div><label className="field-label">Marca / Agencia (Footer)</label><input className="field-input" value={data.footerBrand} onChange={e=>set('footerBrand',e.target.value)}/></div>
-        <div><label className="field-label">Nota del Footer</label><input className="field-input" value={data.footerNote} onChange={e=>set('footerNote',e.target.value)}/></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div><label className="field-label">Marca / Agencia (Footer)</label><input aria-label="Marca / Agencia (Footer)" className="field-input" value={data.footerBrand} onChange={e=>set('footerBrand',e.target.value)}/></div>
+        <div><label className="field-label">Nota del Footer</label><input aria-label="Nota del Footer" className="field-input" value={data.footerNote} onChange={e=>set('footerNote',e.target.value)}/></div>
       </div>
       <div>
         <label className="field-label">Descripción General</label>
-        <RichTextEditor value={data.overview} onChange={v=>set('overview',v)} placeholder="Descripción general del DataLayer implementado, framework utilizado, etc."/>
+        <RichTextEditor label="Descripción General" value={data.overview} onChange={v=>set('overview',v)} placeholder="Descripción general del DataLayer implementado, framework utilizado, etc."/>
       </div>
       <div className="pt-2 border-t border-slate-800 space-y-3">
         <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Opciones de exportación</p>

@@ -60,23 +60,23 @@ export default function TPItemsList({ data, onChange }: Props) {
             {expanded === item.id && (
               <div className="p-4 border-t border-slate-700/50 space-y-3">
                 <div className="grid grid-cols-4 gap-3">
-                  <div className="col-span-2"><label className="field-label">Nombre del Evento *</label><input className="field-input" value={item.event} onChange={e=>update(item.id,'event',e.target.value)} placeholder="Ej: purchase, add_to_cart"/></div>
+                  <div className="col-span-2"><label className="field-label">Nombre del Evento *</label><input aria-label="Nombre del Evento" className="field-input" value={item.event} onChange={e=>update(item.id,'event',e.target.value)} placeholder="Ej: purchase, add_to_cart"/></div>
                   <div><label className="field-label">Prioridad</label>
-                    <select className="field-input" value={item.priority} onChange={e=>update(item.id,'priority',e.target.value)}>
+                    <select aria-label="Prioridad" className="field-input" value={item.priority} onChange={e=>update(item.id,'priority',e.target.value)}>
                       {priorityOptions.map(p=><option key={p.value} value={p.value}>{p.label}</option>)}
                     </select>
                   </div>
                   <div><label className="field-label">Estado</label>
-                    <select className="field-input" value={item.status} onChange={e=>update(item.id,'status',e.target.value)}>
+                    <select aria-label="Estado" className="field-input" value={item.status} onChange={e=>update(item.id,'status',e.target.value)}>
                       {statusOptions.map(s=><option key={s.value} value={s.value}>{s.label}</option>)}
                     </select>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div><label className="field-label">Trigger</label><input className="field-input" value={item.trigger} onChange={e=>update(item.id,'trigger',e.target.value)} placeholder="Clic en botón, form submit..."/></div>
-                  <div><label className="field-label">Página / Sección</label><input className="field-input" value={item.page} onChange={e=>update(item.id,'page',e.target.value)} placeholder="Checkout, PDP..."/></div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div><label className="field-label">Trigger</label><input aria-label="Trigger" className="field-input" value={item.trigger} onChange={e=>update(item.id,'trigger',e.target.value)} placeholder="Clic en botón, form submit..."/></div>
+                  <div><label className="field-label">Página / Sección</label><input aria-label="Página / Sección" className="field-input" value={item.page} onChange={e=>update(item.id,'page',e.target.value)} placeholder="Checkout, PDP..."/></div>
                 </div>
-                <div><label className="field-label">Variables (separadas por comas)</label><input className="field-input font-mono text-xs" value={item.variables} onChange={e=>update(item.id,'variables',e.target.value)} placeholder="transaction_id, value, currency..."/></div>
+                <div><label className="field-label">Variables (separadas por comas)</label><input aria-label="Variables (separadas por comas)" className="field-input font-mono text-xs" value={item.variables} onChange={e=>update(item.id,'variables',e.target.value)} placeholder="transaction_id, value, currency..."/></div>
               </div>
             )}
           </div>

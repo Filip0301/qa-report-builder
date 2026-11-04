@@ -12,7 +12,7 @@ export default function ExecutiveSummary({ data, onChange }: Props) {
     <div className="space-y-3">
       <h2 className="text-sm font-bold uppercase tracking-widest text-indigo-400 mb-4">Resumen Ejecutivo</h2>
       <label className="field-label">Texto del Resumen *</label>
-      <RichTextEditor
+      <RichTextEditor label="Texto del Resumen"
         value={data.executiveSummary}
         onChange={(html) => onChange({ ...data, executiveSummary: html })}
         placeholder="Describe el contexto general de la auditoría, qué se encontró, y cuál es el impacto global..."

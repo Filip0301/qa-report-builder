@@ -6,7 +6,6 @@ import { v4 as uuid } from 'uuid';
 
 interface Props { data: DLDocData; onChange: (d: DLDocData) => void; }
 
-const varTypes = ['string','number','boolean','array','object'];
 const emptyEvent = (): DLEvent => ({ id: uuid(), name: '', trigger: '', page: '', description: '', variables: '', codeExample: '' });
 
 export default function DLEventsList({ data, onChange }: Props) {
@@ -29,7 +28,7 @@ export default function DLEventsList({ data, onChange }: Props) {
       {data.events.length === 0 && (
         <div className="text-center py-12 text-slate-500 border-2 border-dashed border-slate-700 rounded-xl">
           <p className="text-2xl mb-2">⚡</p><p className="font-medium">No hay eventos registrados.</p>
-          <p className="text-xs mt-1">Haz clic en "Agregar Evento" para comenzar.</p>
+          <p className="text-xs mt-1">Haz clic en «Agregar Evento» para comenzar.</p>
         </div>
       )}
       <div className="space-y-3">
@@ -49,15 +48,15 @@ export default function DLEventsList({ data, onChange }: Props) {
             </button>
             {expanded === e.id && (
               <div className="px-4 pb-4 space-y-3 border-t border-slate-700/50 pt-4">
-                <div className="grid grid-cols-3 gap-3">
-                  <div><label className="field-label">Nombre del Evento *</label><input className="field-input font-mono text-teal-300" value={e.name} onChange={ev=>update(e.id,'name',ev.target.value)} placeholder="add_to_cart"/></div>
-                  <div><label className="field-label">Trigger</label><input className="field-input" value={e.trigger} onChange={ev=>update(e.id,'trigger',ev.target.value)} placeholder="Clic en botón 'Agregar'"/></div>
-                  <div><label className="field-label">Página / Sección</label><input className="field-input" value={e.page} onChange={ev=>update(e.id,'page',ev.target.value)} placeholder="PDP, Carrito..."/></div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div><label className="field-label">Nombre del Evento *</label><input aria-label="Nombre del Evento" className="field-input font-mono text-teal-300" value={e.name} onChange={ev=>update(e.id,'name',ev.target.value)} placeholder="add_to_cart"/></div>
+                  <div><label className="field-label">Trigger</label><input aria-label="Trigger" className="field-input" value={e.trigger} onChange={ev=>update(e.id,'trigger',ev.target.value)} placeholder="Clic en botón 'Agregar'"/></div>
+                  <div><label className="field-label">Página / Sección</label><input aria-label="Página / Sección" className="field-input" value={e.page} onChange={ev=>update(e.id,'page',ev.target.value)} placeholder="PDP, Carrito..."/></div>
                 </div>
-                <div><label className="field-label">Variables enviadas (separadas por comas)</label><input className="field-input font-mono text-xs" value={e.variables} onChange={ev=>update(e.id,'variables',ev.target.value)} placeholder="item_id, item_name, price, quantity"/></div>
+                <div><label className="field-label">Variables enviadas (separadas por comas)</label><input aria-label="Variables enviadas (separadas por comas)" className="field-input font-mono text-xs" value={e.variables} onChange={ev=>update(e.id,'variables',ev.target.value)} placeholder="item_id, item_name, price, quantity"/></div>
                 <div>
                   <label className="field-label">Código JSON de Ejemplo</label>
-                  <textarea rows={8} className="field-input font-mono text-xs text-green-300 bg-slate-900" value={e.codeExample} onChange={ev=>update(e.id,'codeExample',ev.target.value)}
+                  <textarea aria-label="Código JSON de Ejemplo" rows={8} className="field-input font-mono text-xs text-green-300 bg-slate-900" value={e.codeExample} onChange={ev=>update(e.id,'codeExample',ev.target.value)}
                     placeholder={`window.dataLayer.push({\n  event: '${e.name || 'event_name'}',\n  // variables aquí\n});`}/>
                 </div>
               </div>

@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# librerías copiadas en postinstall
+/public/vendor/
+
+# variables locales (se versiona solo el ejemplo)
+!.env.example

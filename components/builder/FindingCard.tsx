@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { Finding, Severity, severityConfig } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
-import { useState } from 'react';
+import { compressImage, ImageError } from '@/lib/images';
 
 interface Props {
   finding: Finding;
@@ -25,13 +26,23 @@ export default function FindingCard({ finding, index, onChange, onRemove, onMove
   const update = <K extends keyof Finding>(field: K, value: Finding[K]) =>
     onChange({ ...finding, [field]: value });
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const [processingImage, setProcessingImage] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+
+  const loadImage = async (file: File | undefined) => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => update('image', reader.result as string);
-    reader.readAsDataURL(file);
+    setProcessingImage(true);
+    try {
+      update('image', await compressImage(file));
+    } catch (err) {
+      toast.error(err instanceof ImageError ? err.message : 'No se pudo cargar la imagen.');
+    } finally {
+      setProcessingImage(false);
+      if (imgRef.current) imgRef.current.value = '';
+    }
   };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => void loadImage(e.target.files?.[0]);
 
   const removeImage = () => {
     update('image', undefined);
@@ -99,7 +110,7 @@ export default function FindingCard({ finding, index, onChange, onRemove, onMove
           <div className="grid grid-cols-4 gap-4">
             <div>
               <label className="field-label">Severidad</label>
-              <select
+              <select aria-label="Severidad"
                 value={finding.severity}
                 onChange={e => update('severity', e.target.value as Severity)}
                 className="field-input"
@@ -113,7 +124,7 @@ export default function FindingCard({ finding, index, onChange, onRemove, onMove
             </div>
             <div className="col-span-3">
               <label className="field-label">Título del Hallazgo *</label>
-              <input
+              <input aria-label="Título del Hallazgo"
                 type="text"
                 placeholder="Ej: Identificador de Transacción Vacío"
                 value={finding.title}
@@ -126,7 +137,7 @@ export default function FindingCard({ finding, index, onChange, onRemove, onMove
           {/* Description — Rich Text */}
           <div>
             <label className="field-label">Descripción *</label>
-            <RichTextEditor
+            <RichTextEditor label="Descripción"
               value={finding.description}
               onChange={(html) => update('description', html)}
               placeholder="Describe el problema encontrado de forma clara y técnica..."
@@ -137,7 +148,7 @@ export default function FindingCard({ finding, index, onChange, onRemove, onMove
           {/* Location */}
           <div>
             <label className="field-label">Ubicación / Contexto</label>
-            <input
+            <input aria-label="Ubicación / Contexto"
               type="text"
               placeholder='Ej: Botones "Continuar por WhatsApp" en todas las secciones'
               value={finding.location || ''}
@@ -154,7 +165,7 @@ export default function FindingCard({ finding, index, onChange, onRemove, onMove
             </div>
             <div>
               <label className="field-label">Etiqueta del bloque</label>
-              <input
+              <input aria-label="Etiqueta del bloque"
                 type="text"
                 placeholder="Ej: JSON · DataLayer"
                 value={finding.codeBlock?.language || ''}
@@ -166,7 +177,7 @@ export default function FindingCard({ finding, index, onChange, onRemove, onMove
             </div>
             <div>
               <label className="field-label">Código / JSON</label>
-              <textarea
+              <textarea aria-label="Código / JSON"
                 rows={8}
                 placeholder={'Pega aquí el JSON del dataLayer, por ejemplo:\n{\n  "event": "purchase",\n  "ecommerce": {\n    "transaction_id": ""\n  }\n}'}
                 value={finding.codeBlock?.content || ''}
@@ -198,7 +209,7 @@ export default function FindingCard({ finding, index, onChange, onRemove, onMove
               </button>
             </div>
             {finding.showCompare && (
-              <div className="grid grid-cols-2 gap-4 mt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
                 <div className="space-y-2">
                   <label className="field-label text-red-400">🔴 Etiqueta Anómala</label>
                   <input
@@ -276,16 +287,25 @@ export default function FindingCard({ finding, index, onChange, onRemove, onMove
                 </div>
               </div>
             ) : (
-              <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-600 rounded-xl p-6 cursor-pointer hover:border-indigo-500 hover:bg-indigo-900/10 transition-all">
-                <span className="text-3xl">📸</span>
-                <span className="text-sm text-slate-400">Haz clic o arrastra una imagen aquí</span>
-                <span className="text-xs text-slate-600">PNG, JPG, WebP — se embebe en el reporte como base64</span>
+              <label
+                onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={e => { e.preventDefault(); setDragOver(false); void loadImage(e.dataTransfer.files?.[0]); }}
+                className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl p-6 cursor-pointer transition-all focus-within:ring-2 focus-within:ring-indigo-500 ${
+                  dragOver ? 'border-indigo-400 bg-indigo-900/20' : 'border-slate-600 hover:border-indigo-500 hover:bg-indigo-900/10'
+                }`}
+              >
+                <span className="text-3xl" aria-hidden="true">{processingImage ? '⏳' : '📸'}</span>
+                <span className="text-sm text-slate-300">{processingImage ? 'Optimizando imagen…' : 'Haz clic o arrastra una imagen aquí'}</span>
+                <span className="text-xs text-slate-500">PNG, JPG, WebP o GIF — se optimiza automáticamente (máx. 1600 px)</span>
                 <input
                   ref={imgRef}
                   type="file"
                   accept="image/*"
                   onChange={handleImageUpload}
-                  className="hidden"
+                  disabled={processingImage}
+                  className="sr-only"
+                  aria-label="Subir imagen de evidencia"
                 />
               </label>
             )}
@@ -294,7 +314,7 @@ export default function FindingCard({ finding, index, onChange, onRemove, onMove
           {/* Impact — Rich Text */}
           <div>
             <label className="field-label">📉 Impacto</label>
-            <RichTextEditor
+            <RichTextEditor label="Impacto"
               value={finding.impact}
               onChange={(html) => update('impact', html)}
               placeholder="¿Qué consecuencia tiene este error? Ej: Conversiones no registradas, CPA inflado..."
@@ -305,7 +325,7 @@ export default function FindingCard({ finding, index, onChange, onRemove, onMove
           {/* Solution — Rich Text */}
           <div>
             <label className="field-label">✅ Solución IT</label>
-            <RichTextEditor
+            <RichTextEditor label="Solución IT"
               value={finding.solution}
               onChange={(html) => update('solution', html)}
               placeholder="¿Qué debe hacer el equipo técnico para corregirlo?"

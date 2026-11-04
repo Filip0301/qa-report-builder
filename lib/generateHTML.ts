@@ -1,39 +1,28 @@
 import { ReportData, Finding, Severity, severityConfig } from './types';
+import { escapeHtml, sanitizeRichHtml, safeImageSrc } from './html';
+import { formatDocDate } from './dates';
 
-// For plain-text fields (title, label, etc.) — prevents XSS in non-rich attributes
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
+const JSON_TOKEN = /("(?:\\.|[^"\\])*")(\s*:)?|\b(true|false)\b|\bnull\b|(?<![\w.])-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/g;
 
-// For rich-text fields — HTML is authored by the RichTextEditor (trusted, same-origin)
-// We strip dangerous tags/attributes before embedding in the exported document
-function sanitizeRichHtml(html: string): string {
-  if (!html) return '';
-  // Remove script/style/iframe/object tags
-  return html
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[\s\S]*?<\/style>/gi, '')
-    .replace(/<iframe[\s\S]*?>/gi, '')
-    .replace(/<object[\s\S]*?>/gi, '')
-    .replace(/\son\w+\s*=/gi, ' data-removed=');
-}
-
-function syntaxHighlightJSON(json: string): string {
-  const escaped = escapeHtml(json);
-  return escaped
-    .replace(/("(?:[^"\\]|\\.)*")\s*:/g, '<span class="c-key">$1</span>:')
-    .replace(/:\s*("(?:[^"\\]|\\.)*")/g, ': <span class="c-str">$1</span>')
-    .replace(/:\s*(\b\d+\.?\d*\b)/g, ': <span class="c-num">$1</span>')
-    .replace(/:\s*(null)/g, ': <span class="c-null">null</span>')
-    .replace(/:\s*(true|false)/g, ': <span class="c-bool">$1</span>');
+/** Resalta JSON escapando cada fragmento (las comillas se conservan para poder detectarlas). */
+export function syntaxHighlightJSON(json: string): string {
+  let out = '';
+  let last = 0;
+  for (const m of json.matchAll(JSON_TOKEN)) {
+    const [token, str, colon, bool] = m;
+    const index = m.index ?? 0;
+    out += escapeHtml(json.slice(last, index));
+    if (str && colon) out += `<span class="c-key">${escapeHtml(str)}</span>${colon}`;
+    else if (str) out += `<span class="c-str">${escapeHtml(str)}</span>`;
+    else if (bool) out += `<span class="c-bool">${token}</span>`;
+    else if (token === 'null') out += '<span class="c-null">null</span>';
+    else out += `<span class="c-num">${token}</span>`;
+    last = index + token.length;
+  }
+  return out + escapeHtml(json.slice(last));
 }
 
 function getSeverityVars(severity: Severity) {
-  const conf = severityConfig[severity];
   switch (severity) {
     case 'critical':
       return {
@@ -113,7 +102,7 @@ function renderFinding(finding: Finding, index: number): string {
   if (finding.image) {
     imageHtml = `
       <div style="margin:16px 0;">
-        <img src="${finding.image}" alt="${escapeHtml(finding.imageCaption || 'Captura de evidencia')}" style="max-width:100%;border-radius:8px;border:1px solid #e2e8f0;" />
+        <img src="${safeImageSrc(finding.image)}" alt="${escapeHtml(finding.imageCaption || 'Captura de evidencia')}" style="max-width:100%;border-radius:8px;border:1px solid #e2e8f0;" />
         ${finding.imageCaption ? `<p style="font-size:12px;color:#64748b;margin-top:6px;font-style:italic;">${escapeHtml(finding.imageCaption)}</p>` : ''}
       </div>`;
   }
@@ -346,7 +335,7 @@ export function generateHTML(report: ReportData): string {
       ${report.auditor ? `<div class="meta-item"><span class="meta-label">Auditor</span><span class="meta-value">${escapeHtml(report.auditor)}</span></div>` : ''}
       <div class="meta-item">
         <span class="meta-label">Fecha</span>
-        <span class="meta-value">${escapeHtml(report.date)}</span>
+        <span class="meta-value">${escapeHtml(formatDocDate(report.date))}</span>
       </div>
       <div class="meta-item">
         <span class="meta-label">Estado</span>
