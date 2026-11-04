@@ -3,32 +3,33 @@ import React from 'react';
 import { GTMAuditData } from '@/lib/types';
 import { CheckCircle, FileEdit } from 'lucide-react';
 import RichTextEditor from '@/components/ui/RichTextEditor';
+import DateField from '@/components/ui/DateField';
 
 interface Props { data: GTMAuditData; onChange: (d: GTMAuditData) => void; }
 
 export default function GTMMeta({ data, onChange }: Props) {
-  const set = (field: keyof GTMAuditData, value: any) => onChange({ ...data, [field]: value });
+  const set = <K extends keyof GTMAuditData>(field: K, value: GTMAuditData[K]) => onChange({ ...data, [field]: value });
   return (
     <div className="space-y-4">
       <h2 className="text-sm font-bold uppercase tracking-widest text-emerald-400 mb-4">Metadatos de la Auditoría</h2>
-      <div className="grid grid-cols-2 gap-4">
-        <div><label className="field-label">Cliente *</label><input className="field-input" value={data.client} onChange={e=>set('client',e.target.value)} placeholder="Ej: Falabella"/></div>
-        <div><label className="field-label">Nombre del Proyecto</label><input className="field-input" value={data.projectName} onChange={e=>set('projectName',e.target.value)} placeholder="Ej: Auditoría GTM Q2 2026"/></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div><label className="field-label">Cliente *</label><input aria-label="Cliente" className="field-input" value={data.client} onChange={e=>set('client',e.target.value)} placeholder="Ej: Falabella"/></div>
+        <div><label className="field-label">Nombre del Proyecto</label><input aria-label="Nombre del Proyecto" className="field-input" value={data.projectName} onChange={e=>set('projectName',e.target.value)} placeholder="Ej: Auditoría GTM Q2 2026"/></div>
       </div>
       <div className="grid grid-cols-4 gap-4">
         <div>
           <label className="field-label">Container ID *</label>
-          <input className="field-input font-mono text-emerald-300" value={data.containerId} onChange={e=>set('containerId',e.target.value)} placeholder="GTM-XXXXXXX"/>
+          <input aria-label="Container ID" className="field-input font-mono text-emerald-300" value={data.containerId} onChange={e=>set('containerId',e.target.value)} placeholder="GTM-XXXXXXX"/>
         </div>
-        <div><label className="field-label">Account ID</label><input className="field-input font-mono" value={data.accountId} onChange={e=>set('accountId',e.target.value)} placeholder="123456789"/></div>
-        <div><label className="field-label">Auditor</label><input className="field-input" value={data.auditor} onChange={e=>set('auditor',e.target.value)} placeholder="Nombre del analista"/></div>
-        <div><label className="field-label">Fecha</label><input className="field-input" value={data.date} onChange={e=>set('date',e.target.value)}/></div>
+        <div><label className="field-label">Account ID</label><input aria-label="Account ID" className="field-input font-mono" value={data.accountId} onChange={e=>set('accountId',e.target.value)} placeholder="123456789"/></div>
+        <div><label className="field-label">Auditor</label><input aria-label="Auditor" className="field-input" value={data.auditor} onChange={e=>set('auditor',e.target.value)} placeholder="Nombre del analista"/></div>
+        <div><label className="field-label">Fecha</label><DateField value={data.date} onChange={v=>set('date',v)}/></div>
       </div>
-      <div><label className="field-label">Resumen de Hallazgos</label><RichTextEditor value={data.summaryText} onChange={v=>set('summaryText',v)} placeholder="Descripción general del estado del contenedor GTM..."/></div>
-      <div><label className="field-label">Recomendaciones Generales</label><RichTextEditor value={data.recommendations} onChange={v=>set('recommendations',v)} placeholder="Lista de acciones recomendadas para mejorar el contenedor..."/></div>
-      <div className="grid grid-cols-2 gap-4">
-        <div><label className="field-label">Marca / Agencia (Footer)</label><input className="field-input" value={data.footerBrand} onChange={e=>set('footerBrand',e.target.value)}/></div>
-        <div><label className="field-label">Nota del Footer</label><input className="field-input" value={data.footerNote} onChange={e=>set('footerNote',e.target.value)}/></div>
+      <div><label className="field-label">Resumen de Hallazgos</label><RichTextEditor label="Resumen de Hallazgos" value={data.summaryText} onChange={v=>set('summaryText',v)} placeholder="Descripción general del estado del contenedor GTM..."/></div>
+      <div><label className="field-label">Recomendaciones Generales</label><RichTextEditor label="Recomendaciones Generales" value={data.recommendations} onChange={v=>set('recommendations',v)} placeholder="Lista de acciones recomendadas para mejorar el contenedor..."/></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div><label className="field-label">Marca / Agencia (Footer)</label><input aria-label="Marca / Agencia (Footer)" className="field-input" value={data.footerBrand} onChange={e=>set('footerBrand',e.target.value)}/></div>
+        <div><label className="field-label">Nota del Footer</label><input aria-label="Nota del Footer" className="field-input" value={data.footerNote} onChange={e=>set('footerNote',e.target.value)}/></div>
       </div>
       <div className="pt-2 border-t border-slate-800">
         <div className="flex items-center justify-between p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">

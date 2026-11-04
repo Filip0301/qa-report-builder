@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-/* ── Custom component classes ── */
+/* ── Clases de componentes (en una capa: las utilidades de Tailwind pueden sobrescribirlas) ── */
+@layer components {
 
 .field-label {
   display: block;
@@ -32,7 +33,7 @@
 }
 
 .field-input::placeholder {
-  color: #475569;
+  color: #64748b; /* contraste suficiente (WCAG AA) */
 }
 
 .field-input option {
@@ -130,3 +131,31 @@
 .rte-body ul ul   { list-style-type: circle; }
 .rte-body ul ul ul { list-style-type: square; }
 
+
+}
+
+/* ── Fondo con cuadrícula (inicio y login) ─────────────────────────────── */
+.app-grid-bg {
+  background-color: #020617;
+  background-image:
+    radial-gradient(ellipse at top, rgba(79, 70, 229, 0.18), transparent 60%),
+    linear-gradient(rgba(148, 163, 184, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.04) 1px, transparent 1px);
+  background-size: 100% 100%, 32px 32px, 32px 32px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px) scale(0.99); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Foco visible para navegación con teclado */
+:where(button, a, input, select, textarea, [contenteditable], [tabindex]):focus-visible {
+  outline: 2px solid #818cf8;
+  outline-offset: 2px;
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

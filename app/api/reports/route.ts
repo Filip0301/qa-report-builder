@@ -1,44 +1,22 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
+import { fromSupabaseError, requireUser } from '@/lib/api/http';
 
+export const dynamic = 'force-dynamic';
+
+/** Lista los documentos activos (no borrados), del más reciente al más antiguo. */
 export async function GET() {
+  const supabase = await createClient();
+  const auth = await requireUser(supabase);
+  if ('error' in auth) return auth.error;
+
   const { data, error } = await supabase
     .from('reports')
-    .select('id, title, client, created_at, report_status, doc_type')
-    .order('created_at', { ascending: false });
+    .select('id, title, client, created_at, updated_at, report_status, doc_type')
+    .is('deleted_at', null)
+    .order('updated_at', { ascending: false })
+    .limit(500);
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  return NextResponse.json(data);
-}
-
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { title, client, data, reportStatus, docType } = body;
-
-    const { data: newReport, error } = await supabase
-      .from('reports')
-      .insert([
-        {
-          title: title || 'Sin título',
-          client: client || 'Sin cliente',
-          report_status: reportStatus || 'draft',
-          doc_type: docType || 'qa-audit',
-          data,
-        },
-      ])
-      .select('id')
-      .single();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ id: newReport.id });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 400 });
-  }
+  if (error) return fromSupabaseError(error);
+  return NextResponse.json(data ?? []);
 }

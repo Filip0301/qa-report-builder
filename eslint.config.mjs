@@ -12,7 +12,14 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Librerías de terceros copiadas en postinstall y reportes de cobertura.
+    "public/vendor/**",
+    "coverage/**",
   ]),
+  {
+    // Las imágenes son data-URLs embebidas por el usuario: next/image no aporta aquí.
+    rules: { "@next/next/no-img-element": "off" },
+  },
 ]);
 
 export default eslintConfig;

@@ -1,24 +1,19 @@
 import { TaggingPlanData, TaggingItem, TaggingItemStatus, TaggingItemPriority } from './types';
+import { escapeHtml as esc, sanitizeRichHtml as richHtml } from './html';
+import { formatDocDate } from './dates';
 
-function esc(s: string): string {
-  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function richHtml(html: string): string {
-  if (!html) return '';
-  return html.replace(/<script[\s\S]*?<\/script>/gi,'').replace(/<style[\s\S]*?<\/style>/gi,'').replace(/\son\w+\s*=/gi,' data-removed=');
-}
 
 const statusLabel: Record<TaggingItemStatus, string> = { pending:'Pendiente', 'in-progress':'En Progreso', done:'Listo', blocked:'Bloqueado' };
 const priorityLabel: Record<TaggingItemPriority, string> = { high:'Alta', medium:'Media', low:'Baja' };
 
-function renderItemRow(item: TaggingItem, i: number): string {
+function renderItemRow(item: TaggingItem): string {
   return `<tr>
     <td style="font-weight:700;color:#1e293b;">${esc(item.event)}</td>
     <td style="color:#475569;">${esc(item.trigger)}</td>
     <td style="color:#475569;">${esc(item.page)}</td>
     <td><code style="font-size:11px;background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px;">${esc(item.variables)}</code></td>
-    <td><span class="priority-badge priority-${item.priority}">${priorityLabel[item.priority]}</span></td>
-    <td><span class="status-badge status-${item.status}">${statusLabel[item.status]}</span></td>
+    <td><span class="priority-badge priority-${esc(item.priority)}">${priorityLabel[item.priority]}</span></td>
+    <td><span class="status-badge status-${esc(item.status)}">${statusLabel[item.status]}</span></td>
   </tr>`;
 }
 
@@ -82,7 +77,7 @@ export function generateTaggingPlanHTML(report: TaggingPlanData): string {
       <div class="meta-item"><span class="meta-label">Cliente</span><span class="meta-value">${esc(report.client)}</span></div>
       ${report.author ? `<div class="meta-item"><span class="meta-label">Autor</span><span class="meta-value">${esc(report.author)}</span></div>` : ''}
       <div class="meta-item"><span class="meta-label">Plataforma</span><span class="meta-value">${esc(report.platform)}</span></div>
-      <div class="meta-item"><span class="meta-label">Fecha</span><span class="meta-value">${esc(report.date)}</span></div>
+      <div class="meta-item"><span class="meta-label">Fecha</span><span class="meta-value">${esc(formatDocDate(report.date))}</span></div>
       <div class="meta-item"><span class="meta-label">Versión</span><span class="meta-value">${esc(report.version)}</span></div>
     </div>
   </div>

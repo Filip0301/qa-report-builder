@@ -6,6 +6,7 @@ import React, {
   useCallback,
   useState,
 } from 'react';
+import { sanitizeRichHtml } from '@/lib/html';
 
 interface Props {
   value: string;          // HTML string
@@ -13,6 +14,8 @@ interface Props {
   placeholder?: string;
   rows?: number;
   className?: string;
+  /** Nombre accesible del campo (lo anuncian los lectores de pantalla). */
+  label?: string;
 }
 
 // ─── Color palettes ────────────────────────────────────────────────────────
@@ -56,6 +59,8 @@ function TBtn({
         onClick(e);
       }}
       title={title}
+      aria-label={title}
+      aria-pressed={active}
       className={`w-7 h-7 flex items-center justify-center rounded text-xs font-bold transition-colors
         ${active
           ? 'bg-indigo-500 text-white'
@@ -79,6 +84,7 @@ export default function RichTextEditor({
   placeholder = 'Escribe aquí...',
   rows = 4,
   className = '',
+  label,
 }: Props) {
   const editorRef = useRef<HTMLDivElement>(null);
   const [showTextColors, setShowTextColors] = useState(false);
@@ -89,8 +95,9 @@ export default function RichTextEditor({
   useEffect(() => {
     const el = editorRef.current;
     if (!el) return;
-    if (document.activeElement !== el && el.innerHTML !== value) {
-      el.innerHTML = value || '';
+    if (document.activeElement !== el) {
+      const safe = sanitizeRichHtml(value);
+      if (el.innerHTML !== safe) el.innerHTML = safe;
     }
   }, [value]);
 
@@ -107,6 +114,20 @@ export default function RichTextEditor({
     },
     [emitChange]
   );
+
+  // ── Pegar: se limpia el HTML de otras fuentes (Word, webs, Google Docs…) ─
+  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLDivElement>) => {
+    const html = e.clipboardData.getData('text/html');
+    const text = e.clipboardData.getData('text/plain');
+    if (!html && !text) return;
+    e.preventDefault();
+    if (html) {
+      document.execCommand('insertHTML', false, sanitizeRichHtml(html));
+    } else {
+      document.execCommand('insertText', false, text);
+    }
+    emitChange();
+  }, [emitChange]);
 
   // ── Handle Enter key: produce <p> paragraphs instead of <div> ────────────
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -251,6 +272,7 @@ export default function RichTextEditor({
                   key={c.value}
                   type="button"
                   title={c.label}
+                  aria-label={`Color ${c.label}`}
                   onMouseDown={(e) => { e.preventDefault(); applyColor(c.value); }}
                   className="w-6 h-6 rounded-full border-2 border-transparent hover:border-white transition-all hover:scale-110"
                   style={{ background: c.value }}
@@ -259,6 +281,7 @@ export default function RichTextEditor({
               <button
                 type="button"
                 title="Sin color"
+                aria-label="Sin color"
                 onMouseDown={(e) => { e.preventDefault(); exec('foreColor', '#cbd5e1'); setShowTextColors(false); }}
                 className="w-6 h-6 rounded-full border-2 border-slate-500 bg-slate-700 text-slate-400 text-[9px] font-bold hover:border-white transition-all flex items-center justify-center"
               >✕</button>
@@ -276,7 +299,7 @@ export default function RichTextEditor({
             }}
             title="Destacador / Highlighter"
           >
-            🖍️
+            <span aria-hidden="true">🖍️</span>
           </TBtn>
           {showHighlights && (
             <div
@@ -288,6 +311,7 @@ export default function RichTextEditor({
                   key={c.value}
                   type="button"
                   title={c.label}
+                  aria-label={`Destacar ${c.label}`}
                   onMouseDown={(e) => { e.preventDefault(); applyHighlight(c.value); }}
                   className="w-6 h-6 rounded border-2 border-transparent hover:border-white transition-all hover:scale-110 text-[9px] font-bold"
                   style={{ background: c.value, color: c.text }}
@@ -298,6 +322,7 @@ export default function RichTextEditor({
               <button
                 type="button"
                 title="Sin destacado"
+                aria-label="Sin destacado"
                 onMouseDown={(e) => { e.preventDefault(); applyHighlight('transparent'); setShowHighlights(false); }}
                 className="w-6 h-6 rounded border-2 border-slate-500 bg-slate-700 text-slate-400 text-[9px] font-bold hover:border-white transition-all flex items-center justify-center"
               >✕</button>
@@ -324,7 +349,11 @@ export default function RichTextEditor({
         contentEditable
         suppressContentEditableWarning
         onInput={emitChange}
+        onPaste={handlePaste}
         onKeyDown={handleKeyDown}
+        role="textbox"
+        aria-multiline="true"
+        aria-label={label ?? placeholder}
         onFocus={handleFocus}
         onBlur={handleBlur}
         data-placeholder={placeholder}

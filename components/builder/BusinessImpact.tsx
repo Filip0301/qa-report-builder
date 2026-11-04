@@ -56,7 +56,7 @@ export default function BusinessImpact({ data, onChange }: Props) {
           <div className="space-y-3">
             <div>
               <label className="field-label">Título</label>
-              <input
+              <input aria-label="Título"
                 type="text"
                 placeholder="Ej: Inversión en Riesgo"
                 value={point.title}
@@ -66,7 +66,7 @@ export default function BusinessImpact({ data, onChange }: Props) {
             </div>
             <div>
               <label className="field-label">Descripción</label>
-              <RichTextEditor
+              <RichTextEditor label="Descripción"
                 value={point.description}
                 onChange={(html) => updatePoint(point.id, 'description', html)}
                 placeholder="Explica el impacto..."

@@ -2,6 +2,8 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 import { Finding, ReportData, SectionHeights, severityConfig } from '@/lib/types';
+import { sanitizeRichHtml, isSafeImageSrc } from '@/lib/html';
+import { formatDocDate } from '@/lib/dates';
 
 interface Props {
   data: ReportData;
@@ -133,7 +135,7 @@ function FindingCardPreview({
             <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 pt-0.5">Descripción</span>
             <span
               className="leading-relaxed rte-content"
-              dangerouslySetInnerHTML={{ __html: finding.description }}
+              dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(finding.description) }}
             />
           </div>
         )}
@@ -161,7 +163,7 @@ function FindingCardPreview({
         {finding.image && (
           <div>
             <img
-              src={finding.image}
+              src={isSafeImageSrc(finding.image) ? finding.image : undefined}
               alt={finding.imageCaption || 'Evidencia'}
               className="max-h-32 rounded-lg border border-slate-200 object-contain"
             />
@@ -175,7 +177,7 @@ function FindingCardPreview({
             <span className="text-base leading-none mt-0.5">📉</span>
             <span className="rte-content">
               <strong className="text-indigo-700">Impacto: </strong>
-              <span dangerouslySetInnerHTML={{ __html: finding.impact }} />
+              <span dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(finding.impact) }} />
             </span>
           </div>
         )}
@@ -184,7 +186,7 @@ function FindingCardPreview({
             <span className="text-base leading-none mt-0.5">✅</span>
             <span className="rte-content">
               <strong className="text-green-700">Solución IT: </strong>
-              <span dangerouslySetInnerHTML={{ __html: finding.solution }} />
+              <span dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(finding.solution) }} />
             </span>
           </div>
         )}
@@ -304,7 +306,7 @@ export default function ReportPreviewNative({ data, onReorder, onResize, onFindi
             {[
               { label: 'Cliente', value: data.client },
               data.auditor ? { label: 'Auditor', value: data.auditor } : null,
-              { label: 'Fecha', value: data.date },
+              { label: 'Fecha', value: formatDocDate(data.date) },
               { label: 'Estado', value: statusBadge },
             ]
               .filter(Boolean)
@@ -341,7 +343,7 @@ export default function ReportPreviewNative({ data, onReorder, onResize, onFindi
             >
               <div
                 className="text-sm text-slate-600 leading-relaxed bg-slate-50 border-l-4 border-indigo-500 rounded-r-xl px-6 py-5 rte-content"
-                dangerouslySetInnerHTML={{ __html: data.executiveSummary || '<span style="color:#94a3b8;font-style:italic">Sin resumen ejecutivo aún.</span>' }}
+                dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(data.executiveSummary) || '<span style="color:#94a3b8;font-style:italic">Sin resumen ejecutivo aún.</span>' }}
               />
             </ResizableSection>
           </section>
@@ -405,7 +407,7 @@ export default function ReportPreviewNative({ data, onReorder, onResize, onFindi
                         </span>
                         <span className="rte-content">
                           {bp.title && <strong>{bp.title}: </strong>}
-                          <span dangerouslySetInnerHTML={{ __html: bp.description }} />
+                          <span dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(bp.description) }} />
                         </span>
                       </li>
                     ))}

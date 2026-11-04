@@ -1,8 +1,7 @@
-import { CM360AuditData, CM360Floodlight, CM360Action } from './types';
+import { CM360AuditData, CM360Action } from './types';
+import { escapeHtml as esc } from './html';
+import { formatDocDate } from './dates';
 
-function esc(s: string): string {
-  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
 
 function actionBadge(action: CM360Action): string {
   const map: Record<CM360Action, [string, string]> = {
@@ -118,7 +117,7 @@ export function generateCM360AuditHTML(report: CM360AuditData): string {
       ${report.advertiserName ? `<div class="meta-item"><span class="meta-label">Anunciante</span><span class="meta-value">${esc(report.advertiserName)}</span></div>` : ''}
       <div class="meta-item"><span class="meta-label">Advertiser ID</span><span class="meta-value"><span class="container-id">${esc(report.advertiserId)}</span></span></div>
       ${report.auditor ? `<div class="meta-item"><span class="meta-label">Auditor</span><span class="meta-value">${esc(report.auditor)}</span></div>` : ''}
-      <div class="meta-item"><span class="meta-label">Fecha</span><span class="meta-value">${esc(report.date)}</span></div>
+      <div class="meta-item"><span class="meta-label">Fecha</span><span class="meta-value">${esc(formatDocDate(report.date))}</span></div>
     </div>
   </div>
   <div class="report-body">

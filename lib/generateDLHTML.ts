@@ -1,12 +1,7 @@
 import { DLDocData, DLEvent } from './types';
+import { escapeHtml as esc, sanitizeRichHtml as richHtml } from './html';
+import { formatDocDate } from './dates';
 
-function esc(s: string): string {
-  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function richHtml(html: string): string {
-  if (!html) return '';
-  return html.replace(/<script[\s\S]*?<\/script>/gi,'').replace(/<style[\s\S]*?<\/style>/gi,'').replace(/\son\w+\s*=/gi,' data-removed=');
-}
 
 function renderEvent(e: DLEvent, i: number): string {
   const vars = e.variables ? e.variables.split(',').map(v => `<span class="var-badge">${esc(v.trim())}</span>`).join(' ') : '';
@@ -53,7 +48,7 @@ export function generateDLHTML(report: DLDocData): string {
       <tbody>
         ${report.variables.map(v=>`<tr>
           <td><code class="var-code">${esc(v.name)}</code></td>
-          <td><span class="type-badge type-${v.type}">${v.type}</span></td>
+          <td><span class="type-badge type-${esc(v.type)}">${esc(v.type)}</span></td>
           <td>${esc(v.description)}</td>
           <td><code>${esc(v.example)}</code></td>
         </tr>`).join('')}
@@ -135,7 +130,7 @@ export function generateDLHTML(report: DLDocData): string {
     <div class="header-meta">
       <div class="meta-item"><span class="meta-label">Cliente</span><span class="meta-value">${esc(report.client)}</span></div>
       ${report.author ? `<div class="meta-item"><span class="meta-label">Autor</span><span class="meta-value">${esc(report.author)}</span></div>` : ''}
-      <div class="meta-item"><span class="meta-label">Fecha</span><span class="meta-value">${esc(report.date)}</span></div>
+      <div class="meta-item"><span class="meta-label">Fecha</span><span class="meta-value">${esc(formatDocDate(report.date))}</span></div>
       <div class="meta-item"><span class="meta-label">Versión</span><span class="meta-value"><span class="version-badge">${esc(report.version)}</span></span></div>
     </div>
   </div>

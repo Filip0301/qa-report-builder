@@ -1,12 +1,7 @@
-import { GTMAuditData, GTMTag, GTMTrigger, GTMVariable } from './types';
+import { GTMAuditData, GTMTag } from './types';
+import { escapeHtml as esc, sanitizeRichHtml as richHtml } from './html';
+import { formatDocDate } from './dates';
 
-function esc(s: string): string {
-  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function richHtml(html: string): string {
-  if (!html) return '';
-  return html.replace(/<script[\s\S]*?<\/script>/gi,'').replace(/<style[\s\S]*?<\/style>/gi,'').replace(/\son\w+\s*=/gi,' data-removed=');
-}
 
 function tagStatusBadge(status: GTMTag['status']): string {
   const map = { active:['Activo','badge-active'], paused:['Pausado','badge-paused'], issues:['Con Problemas','badge-issues'] } as const;
@@ -31,14 +26,14 @@ export function generateGTMAuditHTML(report: GTMAuditData): string {
     <td style="font-weight:700;">${esc(t.name)}</td>
     <td><code style="font-size:11px;background:rgba(0,0,0,.05);padding:1px 5px;border-radius:3px;">${esc(t.type)}</code></td>
     <td style="color:#475569;">${esc(t.conditions)}</td>
-    <td style="color:#dc2626;font-size:13px;">${t.issues || '<span style="color:#94a3b8;">—</span>'}</td>
+    <td style="color:#dc2626;font-size:13px;">${t.issues ? richHtml(t.issues) : '<span style="color:#94a3b8;">—</span>'}</td>
   </tr>`).join('');
 
   const variablesHtml = report.variables.map(v => `<tr>
     <td style="font-weight:700;">${esc(v.name)}</td>
     <td><code style="font-size:11px;background:rgba(0,0,0,.05);padding:1px 5px;border-radius:3px;">${esc(v.type)}</code></td>
     <td style="color:#475569;">${esc(v.value)}</td>
-    <td style="color:#dc2626;font-size:13px;">${v.issues || '<span style="color:#94a3b8;">—</span>'}</td>
+    <td style="color:#dc2626;font-size:13px;">${v.issues ? richHtml(v.issues) : '<span style="color:#94a3b8;">—</span>'}</td>
   </tr>`).join('');
 
   return `<!DOCTYPE html>
@@ -93,7 +88,7 @@ export function generateGTMAuditHTML(report: GTMAuditData): string {
       <div class="meta-item"><span class="meta-label">Container ID</span><span class="meta-value"><span class="container-id">${esc(report.containerId)}</span></span></div>
       ${report.accountId ? `<div class="meta-item"><span class="meta-label">Cuenta</span><span class="meta-value">${esc(report.accountId)}</span></div>` : ''}
       ${report.auditor ? `<div class="meta-item"><span class="meta-label">Auditor</span><span class="meta-value">${esc(report.auditor)}</span></div>` : ''}
-      <div class="meta-item"><span class="meta-label">Fecha</span><span class="meta-value">${esc(report.date)}</span></div>
+      <div class="meta-item"><span class="meta-label">Fecha</span><span class="meta-value">${esc(formatDocDate(report.date))}</span></div>
     </div>
   </div>
   <div class="report-body">

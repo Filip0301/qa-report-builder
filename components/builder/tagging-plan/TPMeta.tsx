@@ -3,30 +3,31 @@ import React from 'react';
 import { TaggingPlanData } from '@/lib/types';
 import { CheckCircle, FileEdit } from 'lucide-react';
 import RichTextEditor from '@/components/ui/RichTextEditor';
+import DateField from '@/components/ui/DateField';
 
 interface Props { data: TaggingPlanData; onChange: (d: TaggingPlanData) => void; }
 
 export default function TPMeta({ data, onChange }: Props) {
-  const set = (field: keyof TaggingPlanData, value: any) => onChange({ ...data, [field]: value });
+  const set = <K extends keyof TaggingPlanData>(field: K, value: TaggingPlanData[K]) => onChange({ ...data, [field]: value });
   return (
     <div className="space-y-4">
       <h2 className="text-sm font-bold uppercase tracking-widest text-violet-400 mb-4">Metadatos del Plan</h2>
-      <div className="grid grid-cols-2 gap-4">
-        <div><label className="field-label">Cliente *</label><input className="field-input" value={data.client} onChange={e=>set('client',e.target.value)} placeholder="Ej: Falabella"/></div>
-        <div><label className="field-label">Nombre del Proyecto *</label><input className="field-input" value={data.projectName} onChange={e=>set('projectName',e.target.value)} placeholder="Ej: Plan de Marcaje GA4 Q2"/></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div><label className="field-label">Cliente *</label><input aria-label="Cliente" className="field-input" value={data.client} onChange={e=>set('client',e.target.value)} placeholder="Ej: Falabella"/></div>
+        <div><label className="field-label">Nombre del Proyecto *</label><input aria-label="Nombre del Proyecto" className="field-input" value={data.projectName} onChange={e=>set('projectName',e.target.value)} placeholder="Ej: Plan de Marcaje GA4 Q2"/></div>
       </div>
       <div className="grid grid-cols-4 gap-4">
-        <div><label className="field-label">Versión</label><input className="field-input" value={data.version} onChange={e=>set('version',e.target.value)} placeholder="v1.0"/></div>
-        <div><label className="field-label">Fecha</label><input className="field-input" value={data.date} onChange={e=>set('date',e.target.value)}/></div>
-        <div><label className="field-label">Autor</label><input className="field-input" value={data.author} onChange={e=>set('author',e.target.value)} placeholder="Nombre del analista"/></div>
-        <div><label className="field-label">Plataforma</label><input className="field-input" value={data.platform} onChange={e=>set('platform',e.target.value)} placeholder="GA4 + GTM"/></div>
+        <div><label className="field-label">Versión</label><input aria-label="Versión" className="field-input" value={data.version} onChange={e=>set('version',e.target.value)} placeholder="v1.0"/></div>
+        <div><label className="field-label">Fecha</label><DateField value={data.date} onChange={v=>set('date',v)}/></div>
+        <div><label className="field-label">Autor</label><input aria-label="Autor" className="field-input" value={data.author} onChange={e=>set('author',e.target.value)} placeholder="Nombre del analista"/></div>
+        <div><label className="field-label">Plataforma</label><input aria-label="Plataforma" className="field-input" value={data.platform} onChange={e=>set('platform',e.target.value)} placeholder="GA4 + GTM"/></div>
       </div>
-      <div><label className="field-label">Objetivo del Plan</label><RichTextEditor value={data.objective} onChange={v=>set('objective',v)} placeholder="Objetivo y alcance general del plan de marcaje..."/></div>
-      <div><label className="field-label">Alcance (Scope)</label><RichTextEditor value={data.scope} onChange={v=>set('scope',v)} placeholder="Páginas, flujos o secciones incluidas en el alcance..."/></div>
-      <div><label className="field-label">Criterios de Aceptación</label><RichTextEditor value={data.acceptanceCriteria} onChange={v=>set('acceptanceCriteria',v)} placeholder="Condiciones para considerar el plan como implementado y aprobado..."/></div>
-      <div className="grid grid-cols-2 gap-4">
-        <div><label className="field-label">Marca / Agencia (Footer)</label><input className="field-input" value={data.footerBrand} onChange={e=>set('footerBrand',e.target.value)}/></div>
-        <div><label className="field-label">Nota del Footer</label><input className="field-input" value={data.footerNote} onChange={e=>set('footerNote',e.target.value)}/></div>
+      <div><label className="field-label">Objetivo del Plan</label><RichTextEditor label="Objetivo del Plan" value={data.objective} onChange={v=>set('objective',v)} placeholder="Objetivo y alcance general del plan de marcaje..."/></div>
+      <div><label className="field-label">Alcance (Scope)</label><RichTextEditor label="Alcance (Scope)" value={data.scope} onChange={v=>set('scope',v)} placeholder="Páginas, flujos o secciones incluidas en el alcance..."/></div>
+      <div><label className="field-label">Criterios de Aceptación</label><RichTextEditor label="Criterios de Aceptación" value={data.acceptanceCriteria} onChange={v=>set('acceptanceCriteria',v)} placeholder="Condiciones para considerar el plan como implementado y aprobado..."/></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div><label className="field-label">Marca / Agencia (Footer)</label><input aria-label="Marca / Agencia (Footer)" className="field-input" value={data.footerBrand} onChange={e=>set('footerBrand',e.target.value)}/></div>
+        <div><label className="field-label">Nota del Footer</label><input aria-label="Nota del Footer" className="field-input" value={data.footerNote} onChange={e=>set('footerNote',e.target.value)}/></div>
       </div>
       <div className="pt-2 border-t border-slate-800 space-y-3">
         <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Opciones</p>
